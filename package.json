@@ -12,7 +12,8 @@
     "dev": "tsx --watch src/index.ts",
     "build": "tsc",
     "test": "tsx --test src/__tests__/abac.test.ts",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm build",
+    "prepare": "pnpm build"
   },
   "keywords": [
     "abac",
