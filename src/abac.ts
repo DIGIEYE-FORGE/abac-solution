@@ -10,11 +10,13 @@ import type {
   EvaluationContext,
   AccessDecision,
   AccessExplanation,
+  SkippedPolicy,
   PolicyValidationResult,
   ABACConfig,
   EnvironmentResolver,
   ResourceConfig,
   ActionConfig,
+  FilterResult,
 } from "./types";
 
 import { policySchema } from "./config/schemas";
@@ -23,17 +25,20 @@ import {
   DEFAULT_OPERATORS,
   DEFAULT_SUBJECT_ATTRIBUTES,
   DEFAULT_ENVIRONMENT_ATTRIBUTES,
+  DEFAULT_RESOURCE_ATTRIBUTES,
   DEFAULT_ENVIRONMENT_RESOLVERS,
   DEFAULT_RESOURCES,
   DEFAULT_ACTIONS,
 } from "./config/defaults";
 import { compare } from "./utils/operators";
 import { resolveValue, isContextVariable } from "./utils/resolver";
+import { buildFilterResult } from "./utils/ast-builder";
 
 export class ABAC {
   readonly attributes: {
     subject: AttributeDefinition[];
     environment: AttributeDefinition[];
+    resource: AttributeDefinition[];
   };
   readonly operators: OperatorConfig[];
   readonly environmentResolvers: EnvironmentResolver[];
@@ -54,6 +59,7 @@ export class ABAC {
     this.attributes = {
       subject: config?.attributes?.subject ?? DEFAULT_SUBJECT_ATTRIBUTES,
       environment: config?.attributes?.environment ?? DEFAULT_ENVIRONMENT_ATTRIBUTES,
+      resource: config?.attributes?.resource ?? DEFAULT_RESOURCE_ATTRIBUTES,
     };
     this.operators = config?.operators ?? DEFAULT_OPERATORS;
     this.environmentResolvers = mergeResolvers(
@@ -68,6 +74,7 @@ export class ABAC {
     this._attrMap = {
       subject: new Map(this.attributes.subject.map((a) => [a.key, a])),
       environment: new Map(this.attributes.environment.map((a) => [a.key, a])),
+      resource: new Map(this.attributes.resource.map((a) => [a.key, a])),
     };
     this._resourceMap = new Map(this.resources.map((r) => [r.value, r]));
     this._actionMap = new Map(this.actions.map((a) => [a.value, a]));
@@ -152,6 +159,13 @@ export class ABAC {
         forAttributeKeys: [attr.key],
         forCategories: ["subject" as AttributeCategory, "environment" as AttributeCategory],
       })),
+      ...this.attributes.resource.map((attr) => ({
+        value: `{resource.${attr.key}}`,
+        label: `Resource ${attr.label}`,
+        description: `Resolved to the resource's ${attr.label.toLowerCase()}.`,
+        forAttributeKeys: [attr.key],
+        forCategories: ["subject" as AttributeCategory, "environment" as AttributeCategory, "resource" as AttributeCategory],
+      })),
       ...this.environmentResolvers.map((r) => ({
         value: `{${r.key}}`,
         label: r.label,
@@ -194,7 +208,6 @@ export class ABAC {
     return { ...base, ...extra };
   }
 
-
   validatePolicy(policy: unknown): PolicyValidationResult {
     const result = policySchema.safeParse(policy);
     if (result.success) return { valid: true, errors: [] };
@@ -210,9 +223,9 @@ export class ABAC {
 
   evaluateCondition(condition: PolicyCondition, context: EvaluationContext): boolean {
     const { category, attribute } = condition;
-    if (category !== "subject" && category !== "environment") return true;
+    if (category !== "subject" && category !== "environment" && category !== "resource") return true;
 
-    const bucket = context[category];
+    const bucket = category === "resource" ? context.resource : context[category];
     if (!bucket || typeof bucket !== "object") return false;
 
     const left = (bucket as Record<string, unknown>)[attribute.key];
@@ -240,13 +253,22 @@ export class ABAC {
     const sorted = policies.filter((p) => p.isActive).sort((a, b) => b.priority - a.priority);
     const matchedDenies: Policy[] = [];
     const matchedAllows: Policy[] = [];
-    const skipped: Policy[] = [];
+    const skipped: SkippedPolicy[] = [];
 
     for (const p of sorted) {
-      if (!this.evaluatePolicy(p, context, targetResource)) {
-        skipped.push(p);
-        continue;
-      }
+      const resourceMatch = p.resources.includes("*") || p.resources.includes(targetResource);
+      if (!resourceMatch) { skipped.push({ policy: p, reason: "resource_mismatch" }); continue; }
+
+      const actionMatch = p.actions.includes("*") || p.actions.includes(context.action);
+      if (!actionMatch) { skipped.push({ policy: p, reason: "action_mismatch" }); continue; }
+
+      const conditionsMet = p.conditions.length === 0 || (
+        p.conditionLogic === "OR"
+          ? p.conditions.some((c) => this.evaluateCondition(c, context))
+          : p.conditions.every((c) => this.evaluateCondition(c, context))
+      );
+      if (!conditionsMet) { skipped.push({ policy: p, reason: "condition_failed" }); continue; }
+
       (p.effect === "deny" ? matchedDenies : matchedAllows).push(p);
     }
 
@@ -278,17 +300,37 @@ export class ABAC {
   }
 
 
+  // ── Partial evaluation (Phase 1 of two-phase access model) ─────────────
+
+  partialEvaluate(
+    policies: Policy[],
+    context: Omit<EvaluationContext, "resource">,
+    targetResource: string,
+  ): FilterResult {
+    const knownFields = new Set(this.attributes.resource.map((a) => a.key));
+    return buildFilterResult(
+      policies,
+      context as EvaluationContext,
+      targetResource,
+      knownFields,
+      this.defaultEffect,
+    );
+  }
+
+
   can(params: {
     policies: Policy[];
     action: string;
     resource: string;
     subject: Record<string, unknown>;
     environment?: Record<string, unknown>;
+    resourceContext?: Record<string, unknown>;
   }): AccessDecision {
     const context: EvaluationContext = {
       subject: params.subject,
       action: params.action,
       environment: params.environment ?? this.buildEnvironmentContext(),
+      resource: params.resourceContext,
     };
     return this.evaluateAccess(params.policies, context, params.resource);
   }

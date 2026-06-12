@@ -26,51 +26,64 @@ export const DEFAULT_OPERATORS: OperatorConfig[] = [
   { value: "starts_with", label: "Starts With", description: "Prefix match" },
   { value: "ends_with", label: "Ends With", description: "Suffix match" },
   { value: "regex", label: "Regex", description: "Regular expression match" },
+  { value: "between", label: "Between", description: "Value is between two time values (HH:MM-HH:MM)" },
 ];
 
 export const DEFAULT_SUBJECT_ATTRIBUTES: AttributeDefinition[] = [
-  { key: "userId", label: "User ID", valueType: "string", description: "Unique user identifier" },
-  { key: "username", label: "Username", valueType: "string", description: "User login name" },
-  { key: "email", label: "Email", valueType: "string", description: "User email address" },
-  { key: "role", label: "User Role", valueType: "string", description: "User's assigned role" },
-  { key: "tenantId", label: "Tenant ID", valueType: "string", description: "Tenant identifier" },
-  { key: "department", label: "Department", valueType: "string", description: "User's department" },
-  { key: "groups", label: "Groups", valueType: "array", description: "User's groups" },
-  { key: "roleIds", label: "Role IDs", valueType: "array", description: "List of role IDs" },
-  { key: "clearanceLevel", label: "Clearance Level", valueType: "number", description: "Security clearance (1-10)" },
-  { key: "isActive", label: "Is Active", valueType: "boolean", description: "User active status" },
-  { key: "dashboardId", label: "Dashboard ID", valueType: "string", description: "Dashboard context" },
-  { key: "createdAt", label: "Created Date", valueType: "date", description: "User creation date" },
-  { key: "lastLogin", label: "Last Login", valueType: "date", description: "Last login timestamp" },
+  { key: "userId",       label: "User ID",        valueType: "string",  description: "Unique user identifier" },
+  { key: "username",     label: "Username",        valueType: "string",  description: "User login name" },
+  { key: "email",        label: "Email",           valueType: "string",  description: "User email address" },
+  { key: "role",         label: "User Role",       valueType: "string",  description: "User's assigned role" },
+  { key: "tenantId",     label: "Tenant ID",       valueType: "string",  description: "Tenant identifier" },
+  { key: "isActive",     label: "Is Active",       valueType: "boolean", description: "User active status" },
+  { key: "status",       label: "Online Status",   valueType: "string",  description: "User online/offline status", options: ["ONLINE", "OFFLINE"] },
+  { key: "twoFa",        label: "2FA Enabled",     valueType: "boolean", description: "Whether 2FA is enabled on the account" },
+  { key: "isFirstLogin", label: "Is First Login",  valueType: "boolean", description: "True on the user's first login" },
+  { key: "createdAt",    label: "Account Created", valueType: "date",    description: "When the user account was created" },
+  { key: "lastSeenAt",   label: "Last Seen",       valueType: "date",    description: "Last time the user was active" },
+  { key: "phone",        label: "Phone",           valueType: "string",  description: "User phone number" },
+  { key: "department",   label: "Department",      valueType: "string",  description: "User department — stored in users.attributes.department" },
+  { key: "clearanceLevel", label: "Clearance Level", valueType: "number", description: "Security clearance level — stored in users.attributes.clearanceLevel" },
 ];
 
 export const DEFAULT_ENVIRONMENT_ATTRIBUTES: AttributeDefinition[] = [
-  { key: "currentTime", label: "Current Time", valueType: "date", description: "Request timestamp" },
-  { key: "requestDate", label: "Request Date", valueType: "date", description: "Date of request (YYYY-MM-DD)" },
-  { key: "dayOfWeek", label: "Day of Week", valueType: "array", description: "Select one or more days", options: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] },
-  { key: "workHour", label: "Work Hour", valueType: "time", description: "Single time (e.g. 08:00 or 14:30)" },
-  { key: "ipAddress", label: "IP Address", valueType: "string", description: "Client IP address" },
-  { key: "location", label: "Location", valueType: "string", description: "Geographic location" },
-  { key: "deviceType", label: "Device Type", valueType: "string", options: ["desktop", "mobile", "tablet", "api"], description: "Access device" },
-  { key: "networkType", label: "Network Type", valueType: "string", options: ["internal", "vpn", "external"], description: "Network type" },
-  { key: "requestMethod", label: "Request Method", valueType: "string", options: ["GET", "POST", "PUT", "PATCH", "DELETE"], description: "HTTP method" },
-  { key: "requestPath", label: "Request Path", valueType: "string", description: "API or page path" },
-  { key: "userAgent", label: "User Agent", valueType: "string", description: "Client user agent" },
-  { key: "locale", label: "Locale", valueType: "string", description: "Request locale" },
-  { key: "timezone", label: "Timezone", valueType: "string", description: "Request timezone" },
+  { key: "currentTime",    label: "Current Time",    valueType: "date",   description: "Request timestamp" },
+  { key: "requestDate",    label: "Request Date",    valueType: "date",   description: "Date of request (YYYY-MM-DD)" },
+  { key: "dayOfWeek",      label: "Day of Week",     valueType: "array",  description: "Select one or more days", options: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] },
+  { key: "workHour",       label: "Work Hour",       valueType: "time",   description: "Single time (e.g. 08:00 or 14:30)" },
+  { key: "ipAddress",      label: "IP Address",      valueType: "string", description: "Client IP address" },
+  { key: "location",       label: "Location",        valueType: "string", description: "Geographic location" },
+  { key: "deviceType",     label: "Device Type",     valueType: "string", options: ["desktop", "mobile", "tablet", "api"], description: "Access device" },
+  { key: "networkType",    label: "Network Type",    valueType: "string", options: ["internal", "vpn", "external"], description: "Network type" },
+  { key: "requestMethod",  label: "Request Method",  valueType: "string", options: ["GET", "POST", "PUT", "PATCH", "DELETE"], description: "HTTP method" },
+  { key: "requestPath",    label: "Request Path",    valueType: "string", description: "API or page path" },
+  { key: "userAgent",      label: "User Agent",      valueType: "string", description: "Client user agent" },
+  { key: "timezone",       label: "Timezone",        valueType: "string", description: "Request timezone" },
+  { key: "tenantTimezone", label: "Tenant Timezone", valueType: "string", description: "Tenant's configured timezone — injected from tenants.timezone" },
+  { key: "licenseStatus",  label: "License Status",  valueType: "string", options: ["ACTIVE", "EXPIRED"], description: "Current license status — injected from licenses table" },
 ];
 
 export const DEFAULT_RESOURCES: ResourceConfig[] = [
   { value: "*", label: "All Resources", description: "Full access to everything", category: "system" },
 ];
 
+export const DEFAULT_RESOURCE_ATTRIBUTES: AttributeDefinition[] = [
+  { key: "tenantId",    label: "Resource Tenant ID", valueType: "string",  description: "The tenant this resource belongs to" },
+  { key: "ownerId",     label: "Owner ID",            valueType: "string",  description: "The user who owns this resource" },
+  { key: "status",      label: "Status",              valueType: "string",  description: "Current state of the resource", options: ["ONLINE", "OFFLINE", "INACTIVE", "AVAILABLE", "IN_USE", "MAINTENANCE", "RETIRED", "DAMAGED", "LOST", "INPROGRESS", "ACKNOWLEDGED", "REJECTED", "PENDING"] },
+  { key: "severity",    label: "Alert Severity",      valueType: "string",  description: "Severity level — alerts only", options: ["INFO", "WARNING", "CRITICAL"] },
+  { key: "groupId",     label: "Group ID",            valueType: "string",  description: "The group this resource belongs to" },
+  { key: "isEditable",  label: "Is Editable",         valueType: "boolean", description: "Whether the resource can be edited" },
+  { key: "createdAt",   label: "Created At",          valueType: "date",    description: "When the resource was created" },
+];
+
 export const DEFAULT_ACTIONS: ActionConfig[] = [
-  { value: "create", label: "Create", description: "Create new resources (POST)" },
-  { value: "read", label: "Read", description: "View and list resources (GET)" },
-  { value: "update", label: "Update", description: "Modify existing resources (PUT/PATCH)" },
-  { value: "delete", label: "Delete", description: "Remove resources (DELETE)" },
-  { value: "execute", label: "Execute", description: "Run commands and operations" },
-  { value: "manage", label: "Manage", description: "Full management (all operations)" },
+  { value: "create",   label: "Create",  description: "Create new resources (POST)",          httpMethods: ["POST"] },
+  { value: "read",     label: "Read",    description: "View and list resources (GET)",          httpMethods: ["GET"] },
+  { value: "update",   label: "Update",  description: "Modify existing resources (PUT/PATCH)", httpMethods: ["PUT", "PATCH"] },
+  { value: "delete",   label: "Delete",  description: "Remove resources (DELETE)",             httpMethods: ["DELETE"] },
+  { value: "execute",  label: "Execute", description: "Run commands and operations",           httpMethods: [] },
+  { value: "manage",   label: "Manage",  description: "Full management (all operations)",      httpMethods: [] },
 ];
 
 export const DEFAULT_ENVIRONMENT_RESOLVERS: EnvironmentResolver[] = [
@@ -156,11 +169,5 @@ export const DEFAULT_ENVIRONMENT_RESOLVERS: EnvironmentResolver[] = [
     label: "User agent",
     description: "Override: provide via buildEnvironmentContext({ userAgent: req.headers['user-agent'] }).",
     forAttributeKeys: ["userAgent"],
-  },
-  {
-    key: "locale",
-    label: "Locale",
-    description: "Override: provide via buildEnvironmentContext({ locale: 'en-US' }).",
-    forAttributeKeys: ["locale"],
   },
 ];

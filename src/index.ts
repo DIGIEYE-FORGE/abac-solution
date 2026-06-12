@@ -5,4 +5,6 @@ export * from "./config/schemas";
 export { compare, looseEquals, compareOrdered, orderedOp } from "./utils/operators";
 export { isContextVariable, resolveValue } from "./utils/resolver";
 export { pad2, getCurrentMinutes, timeToMinutes } from "./utils/functions";
+export { buildFilterResult, buildFilterNode, isSqlCapable, resolveAtPlanTime, NEVER_MATCH } from "./utils/ast-builder";
+export { toSql, excludeToSqlParts } from "./utils/sql-translator";
 export { ABAC } from "./abac";

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const attributeCategorySchema = z.enum(["subject", "environment"]);
+export const attributeCategorySchema = z.enum(["subject", "environment", "resource"]);
 
 export const attributeOperatorSchema = z.enum([
   "equals", "not_equals",
@@ -9,7 +9,7 @@ export const attributeOperatorSchema = z.enum([
   "greater_than", "less_than",
   "greater_than_or_equal", "less_than_or_equal",
   "starts_with", "ends_with",
-  "regex",
+  "regex", "between",
 ]);
 
 export const policyEffectSchema = z.enum(["allow", "deny"]);
@@ -31,6 +31,7 @@ export const policyConditionSchema = z.object({
     value: conditionValueSchema,
     operator: attributeOperatorSchema,
   }),
+  external: z.boolean().optional(),
 });
 
 export const policySchema = z.object({
@@ -44,4 +45,47 @@ export const policySchema = z.object({
   conditionLogic: conditionLogicSchema,
   priority: z.number().min(0, "Priority must be >= 0"),
   isActive: z.boolean(),
+});
+
+// ── AST / FilterResult schemas ──────────────────────────────────────────────────────
+// Used by DPBE to validate the JSON-parsed AST received over gRPC before
+// passing it to the SQL translator.
+
+export const filterNodeSchema = z.object({
+  type:       z.literal("condition"),
+  field:      z.string(),
+  operator:   attributeOperatorSchema,
+  value:      conditionValueSchema,
+  sqlCapable: z.boolean(),
+  queryCost:  z.enum(["low", "medium", "high"]),
+  indexSafe:  z.boolean(),
+});
+
+export const filterGroupSchema: z.ZodType<any> = z.lazy(() =>
+  z.object({
+    type:       z.literal("group"),
+    logic:      conditionLogicSchema,
+    conditions: z.array(z.union([filterNodeSchema, filterGroupSchema])),
+  }),
+);
+
+export const filterResultSchema = z.object({
+  includeFilter: z.union([filterNodeSchema, filterGroupSchema]).nullable(),
+  excludeFilter: z.union([filterNodeSchema, filterGroupSchema]).nullable(),
+  requiresVerification: z.boolean(),
+  residualConditions: z.array(
+    z.object({
+      policyId:   z.string(),
+      policyName: z.string(),
+      condition:  policyConditionSchema,
+      reason:     z.enum([
+        "non_resource_category",
+        "unresolvable_context_var",
+        "non_sql_operator",
+        "unknown_field",
+        "external_dependency",
+      ]),
+    }),
+  ),
+  defaultEffect: policyEffectSchema,
 });

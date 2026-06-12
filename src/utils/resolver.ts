@@ -36,9 +36,11 @@ function resolveSingle(
 
   const prefix = path.substring(0, dotIdx);
   const rest = path.substring(dotIdx + 1);
-  if ((prefix !== "subject" && prefix !== "environment") || !rest) return raw;
+  if ((prefix !== "subject" && prefix !== "environment" && prefix !== "resource") || !rest) return raw;
 
-  const bucket = context[prefix];
+  const bucket = prefix === "resource"
+    ? (context as any).resource
+    : context[prefix as "subject" | "environment"];
   if (!bucket || typeof bucket !== "object") return raw;
 
   const resolved = (bucket as Record<string, unknown>)[rest];

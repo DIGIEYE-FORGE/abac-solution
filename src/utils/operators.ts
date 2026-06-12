@@ -1,4 +1,5 @@
 import type { AttributeOperator, ConditionValue } from "../types";
+import { timeToMinutes } from "./functions";
 
 export function looseEquals(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -77,6 +78,16 @@ export function compare(
     case "regex":
       if (typeof left !== "string" || typeof right !== "string") return false;
       try { return new RegExp(right).test(left); } catch { return false; }
+
+    case "between": {
+      if (typeof left !== "string" || typeof right !== "string") return false;
+      const dashIdx = right.indexOf("-", 3);
+      if (dashIdx === -1) return false;
+      const start = right.slice(0, dashIdx);
+      const end = right.slice(dashIdx + 1);
+      const cur = timeToMinutes(left);
+      return cur >= timeToMinutes(start) && cur <= timeToMinutes(end);
+    }
 
     default:
       return false;
