@@ -1,0 +1,4448 @@
+2026-06-12 16:08:57:857 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-12 16:08:57:857 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-12 16:08:57:857 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "allow",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-12 16:08:57:857 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [
+    "deny-offline"
+  ],
+  "activePolicies": [
+    {
+      "id": "deny-offline",
+      "name": "policy",
+      "effect": "deny",
+      "priority": 100
+    }
+  ]
+}
+2026-06-12 16:08:57:857 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 0,
+  "denyCount": 1,
+  "allowPolicyIds": [],
+  "denyPolicyIds": [
+    "deny-offline"
+  ]
+}
+2026-06-12 16:08:57:857 info: "Processing deny policy for partial evaluation"
+{
+  "stage": "AST_DENY_POLICY_START",
+  "policyId": "deny-offline",
+  "policyName": "policy",
+  "hasResourceCondition": true,
+  "conditionCount": 1
+}
+2026-06-12 16:08:57:857 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "deny-offline",
+  "policyName": "policy",
+  "effect": "deny",
+  "conditionCount": 1
+}
+2026-06-12 16:08:57:857 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c1",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "OFFLINE",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-12 16:08:57:857 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "OFFLINE",
+  "result": false
+}
+2026-06-12 16:08:57:857 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c1"
+}
+2026-06-12 16:08:57:857 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "OFFLINE"
+}
+2026-06-12 16:08:57:857 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "OFFLINE"
+}
+2026-06-12 16:08:57:857 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "OFFLINE",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-12 16:08:57:857 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "deny-offline",
+  "conditionId": "c1",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-12 16:08:57:857 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "deny-offline",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-12 16:08:57:857 info: "Added deny policy filter group"
+{
+  "stage": "AST_DENY_POLICY_GROUP",
+  "policyId": "deny-offline",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 0,
+  "denyGroupCount": 1,
+  "residualCount": 0
+}
+2026-06-12 16:08:57:857 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-12 16:08:57:857 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-12 16:08:57:857 info: "Partial-evaluation result returned for default deny/no allow"
+{
+  "stage": "AST_FILTER_RESULT_DEFAULT_DENY",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": null,
+    "excludeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "status",
+          "operator": "equals",
+          "value": "OFFLINE",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "allow",
+    "policyIds": [
+      "deny-offline"
+    ],
+    "warnings": []
+  }
+}
+2026-06-12 16:08:57:857 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": null,
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "allow",
+  "policyIds": [
+    "deny-offline"
+  ],
+  "warnings": []
+}
+2026-06-12 16:08:57:857 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "deny",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-12 16:08:57:857 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 0,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-12 16:08:57:857 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 0,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "deny",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-12 16:08:57:857 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [],
+  "activePolicies": []
+}
+2026-06-12 16:08:57:857 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 0,
+  "denyCount": 0,
+  "allowPolicyIds": [],
+  "denyPolicyIds": []
+}
+2026-06-12 16:08:57:857 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": null
+}
+2026-06-12 16:08:57:857 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 0,
+  "denyGroupCount": 0,
+  "residualCount": 0
+}
+2026-06-12 16:08:57:857 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-12 16:08:57:857 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-12 16:08:57:857 info: "Partial-evaluation result returned for default deny/no allow"
+{
+  "stage": "AST_FILTER_RESULT_DEFAULT_DENY",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": {
+      "type": "condition",
+      "field": "1",
+      "operator": "equals",
+      "value": 0,
+      "sqlCapable": true,
+      "queryCost": "low",
+      "indexSafe": true
+    },
+    "excludeFilter": null,
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "deny",
+    "policyIds": [],
+    "warnings": []
+  }
+}
+2026-06-12 16:08:57:857 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": {
+    "type": "condition",
+    "field": "1",
+    "operator": "equals",
+    "value": 0,
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "excludeFilter": null,
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "deny",
+  "policyIds": [],
+  "warnings": []
+}
+2026-06-12 16:08:57:857 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-12 16:08:57:857 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 2,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-12 16:08:57:857 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 2,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "allow",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-12 16:08:57:857 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [
+    "allow-online",
+    "deny-critical"
+  ],
+  "activePolicies": [
+    {
+      "id": "allow-online",
+      "name": "policy",
+      "effect": "allow",
+      "priority": 100
+    },
+    {
+      "id": "deny-critical",
+      "name": "policy",
+      "effect": "deny",
+      "priority": 100
+    }
+  ]
+}
+2026-06-12 16:08:57:857 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 1,
+  "denyCount": 1,
+  "allowPolicyIds": [
+    "allow-online"
+  ],
+  "denyPolicyIds": [
+    "deny-critical"
+  ]
+}
+2026-06-12 16:08:57:857 info: "Processing deny policy for partial evaluation"
+{
+  "stage": "AST_DENY_POLICY_START",
+  "policyId": "deny-critical",
+  "policyName": "policy",
+  "hasResourceCondition": true,
+  "conditionCount": 1
+}
+2026-06-12 16:08:57:857 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "deny-critical",
+  "policyName": "policy",
+  "effect": "deny",
+  "conditionCount": 1
+}
+2026-06-12 16:08:57:857 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c2",
+  "condition": {
+    "id": "c2",
+    "category": "resource",
+    "attribute": {
+      "key": "severity",
+      "value": "CRITICAL",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-12 16:08:57:857 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "CRITICAL",
+  "result": false
+}
+2026-06-12 16:08:57:857 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c2"
+}
+2026-06-12 16:08:57:857 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "CRITICAL"
+}
+2026-06-12 16:08:57:857 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "CRITICAL"
+}
+2026-06-12 16:08:57:857 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c2",
+    "category": "resource",
+    "attribute": {
+      "key": "severity",
+      "value": "CRITICAL",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "severity",
+    "operator": "equals",
+    "value": "CRITICAL",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-12 16:08:57:857 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "deny-critical",
+  "conditionId": "c2",
+  "node": {
+    "type": "condition",
+    "field": "severity",
+    "operator": "equals",
+    "value": "CRITICAL",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-12 16:08:57:857 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "deny-critical",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-12 16:08:57:857 info: "Added deny policy filter group"
+{
+  "stage": "AST_DENY_POLICY_GROUP",
+  "policyId": "deny-critical",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "severity",
+        "operator": "equals",
+        "value": "CRITICAL",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "severity",
+        "operator": "equals",
+        "value": "CRITICAL",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Processing allow policy for partial evaluation"
+{
+  "stage": "AST_ALLOW_POLICY_START",
+  "policyId": "allow-online",
+  "policyName": "policy",
+  "conditionCount": 1
+}
+2026-06-12 16:08:57:857 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "allow-online",
+  "policyName": "policy",
+  "effect": "allow",
+  "conditionCount": 1
+}
+2026-06-12 16:08:57:857 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c1",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "ONLINE",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-12 16:08:57:857 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "ONLINE",
+  "result": false
+}
+2026-06-12 16:08:57:857 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c1"
+}
+2026-06-12 16:08:57:857 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "ONLINE"
+}
+2026-06-12 16:08:57:857 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "ONLINE"
+}
+2026-06-12 16:08:57:857 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "ONLINE",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "ONLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-12 16:08:57:857 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "allow-online",
+  "conditionId": "c1",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "ONLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-12 16:08:57:857 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "allow-online",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-12 16:08:57:857 info: "Added allow policy filter group"
+{
+  "stage": "AST_ALLOW_POLICY_GROUP",
+  "policyId": "allow-online",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "ONLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 1,
+  "denyGroupCount": 1,
+  "residualCount": 0
+}
+2026-06-12 16:08:57:857 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-12 16:08:57:857 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-12 16:08:57:857 info: "Built include filter from allow policies"
+{
+  "stage": "AST_INCLUDE_FILTER",
+  "includeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "ONLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Partial-evaluation result returned"
+{
+  "stage": "AST_FILTER_RESULT_FINAL",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "status",
+          "operator": "equals",
+          "value": "ONLINE",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "excludeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "severity",
+          "operator": "equals",
+          "value": "CRITICAL",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "allow",
+    "policyIds": [
+      "allow-online",
+      "deny-critical"
+    ],
+    "warnings": []
+  }
+}
+2026-06-12 16:08:57:857 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "ONLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "severity",
+        "operator": "equals",
+        "value": "CRITICAL",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "allow",
+  "policyIds": [
+    "allow-online",
+    "deny-critical"
+  ],
+  "warnings": []
+}
+2026-06-12 16:08:57:857 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-12 16:08:57:857 info: "Starting point-in-time access check"
+{
+  "stage": "CAN_START",
+  "resource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "resourceContext": {
+    "groupId": null
+  }
+}
+2026-06-12 16:08:57:857 info: "Starting access explanation"
+{
+  "stage": "EXPLAIN_ACCESS_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "activePolicyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {
+    "now": "2026-06-12T15:08:57.919Z",
+    "date": "2026-06-12",
+    "dayOfWeek": "Friday",
+    "currentHHMM": "16:08",
+    "timezone": "Africa/Casablanca"
+  },
+  "resource": {
+    "groupId": null
+  }
+}
+2026-06-12 16:08:57:857 info: "Evaluating policy condition"
+{
+  "stage": "EVAL_CONDITION_START",
+  "conditionId": "c1",
+  "category": "resource",
+  "attributeKey": "groupId",
+  "operator": "not_equals",
+  "value": "group-1"
+}
+2026-06-12 16:08:57:857 info: "Resolved condition left value"
+{
+  "stage": "EVAL_CONDITION_LEFT",
+  "conditionId": "c1",
+  "attributeKey": "groupId",
+  "left": null
+}
+2026-06-12 16:08:57:857 info: "Condition skipped because left value is null"
+{
+  "stage": "EVAL_CONDITION_NULL",
+  "conditionId": "c1",
+  "attributeKey": "groupId"
+}
+2026-06-12 16:08:57:857 info: "Policy skipped during access explanation"
+{
+  "stage": "EXPLAIN_ACCESS_SKIP",
+  "policy": {
+    "id": "deny-not-group",
+    "name": "policy",
+    "resources": [
+      "devices"
+    ],
+    "actions": [
+      "read"
+    ],
+    "effect": "deny",
+    "conditions": [
+      {
+        "id": "c1",
+        "category": "resource",
+        "attribute": {
+          "key": "groupId",
+          "value": "group-1",
+          "operator": "not_equals"
+        }
+      }
+    ],
+    "conditionLogic": "AND",
+    "priority": 100,
+    "isActive": true
+  },
+  "reason": "condition_failed",
+  "conditionLogic": "AND"
+}
+2026-06-12 16:08:57:857 info: "Access explanation completed"
+{
+  "stage": "EXPLAIN_ACCESS_RESULT",
+  "decision": {
+    "allowed": true,
+    "reason": "No matching deny policy (default allow)"
+  },
+  "matchedDenyIds": [],
+  "matchedAllowIds": [],
+  "skippedCount": 1
+}
+2026-06-12 16:08:57:857 info: "Point-in-time access check completed"
+{
+  "stage": "CAN_RESULT",
+  "resource": "devices",
+  "action": "read",
+  "decision": {
+    "allowed": true,
+    "reason": "No matching deny policy (default allow)"
+  }
+}
+2026-06-12 16:08:57:857 info: "Translating exclude filter to SQL veto parts"
+{
+  "stage": "SQL_EXCLUDE_START",
+  "excludeFilter": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "not_equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-12 16:08:57:857 info: "Negating filter node for deny policy"
+{
+  "stage": "SQL_NEGATE_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "not_equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-12 16:08:57:857 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "not_equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0,
+  "col": "\"groupId\""
+}
+2026-06-12 16:08:57:857 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "not_equals",
+  "fragment": {
+    "sql": "\"groupId\" != $1",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Filter node negation completed"
+{
+  "stage": "SQL_NEGATE_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" != $1)",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Exclude filter SQL translation completed"
+{
+  "stage": "SQL_EXCLUDE_RESULT",
+  "partCount": 1,
+  "parts": [
+    {
+      "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" != $1)",
+      "params": [
+        "group-1"
+      ]
+    }
+  ]
+}
+2026-06-12 16:08:57:857 info: "Translating exclude filter to SQL veto parts"
+{
+  "stage": "SQL_EXCLUDE_START",
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      },
+      {
+        "type": "condition",
+        "field": "groupId",
+        "operator": "equals",
+        "value": "group-1",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "offset": 0
+}
+2026-06-12 16:08:57:857 info: "Negating filter node for deny policy"
+{
+  "stage": "SQL_NEGATE_START",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-12 16:08:57:857 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0,
+  "col": "\"status\""
+}
+2026-06-12 16:08:57:857 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "equals",
+  "fragment": {
+    "sql": "\"status\" = $1",
+    "params": [
+      "OFFLINE"
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Filter node negation completed"
+{
+  "stage": "SQL_NEGATE_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"status\" IS NULL OR NOT (\"status\" = $1)",
+    "params": [
+      "OFFLINE"
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Negating filter node for deny policy"
+{
+  "stage": "SQL_NEGATE_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 1
+}
+2026-06-12 16:08:57:857 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 1,
+  "col": "\"groupId\""
+}
+2026-06-12 16:08:57:857 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "equals",
+  "fragment": {
+    "sql": "\"groupId\" = $2",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Filter node negation completed"
+{
+  "stage": "SQL_NEGATE_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" = $2)",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Exclude filter SQL translation completed"
+{
+  "stage": "SQL_EXCLUDE_RESULT",
+  "partCount": 2,
+  "parts": [
+    {
+      "sql": "\"status\" IS NULL OR NOT (\"status\" = $1)",
+      "params": [
+        "OFFLINE"
+      ]
+    },
+    {
+      "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" = $2)",
+      "params": [
+        "group-1"
+      ]
+    }
+  ]
+}
+2026-06-12 16:08:57:857 info: "Translating include filter node to SQL"
+{
+  "stage": "SQL_TO_SQL_START",
+  "node": {
+    "type": "condition",
+    "field": "deviceId",
+    "operator": "equals",
+    "value": "device-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-12 16:08:57:857 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "deviceId",
+    "operator": "equals",
+    "value": "device-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0,
+  "col": "\"deviceId\""
+}
+2026-06-12 16:08:57:857 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "equals",
+  "fragment": {
+    "sql": "\"deviceId\" = $1",
+    "params": [
+      "device-1"
+    ]
+  }
+}
+2026-06-12 16:08:57:857 info: "Include filter SQL translation completed"
+{
+  "stage": "SQL_TO_SQL_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"deviceId\" = $1",
+    "params": [
+      "device-1"
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-13 19:20:20:2020 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:20:2020 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "allow",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:20:2020 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [
+    "deny-offline"
+  ],
+  "activePolicies": [
+    {
+      "id": "deny-offline",
+      "name": "policy",
+      "effect": "deny",
+      "priority": 100
+    }
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 0,
+  "denyCount": 1,
+  "allowPolicyIds": [],
+  "denyPolicyIds": [
+    "deny-offline"
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Processing deny policy for partial evaluation"
+{
+  "stage": "AST_DENY_POLICY_START",
+  "policyId": "deny-offline",
+  "policyName": "policy",
+  "hasResourceCondition": true,
+  "conditionCount": 1
+}
+2026-06-13 19:20:20:2020 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "deny-offline",
+  "policyName": "policy",
+  "effect": "deny",
+  "conditionCount": 1
+}
+2026-06-13 19:20:20:2020 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c1",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "OFFLINE",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "OFFLINE",
+  "result": false
+}
+2026-06-13 19:20:20:2020 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c1"
+}
+2026-06-13 19:20:20:2020 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "OFFLINE"
+}
+2026-06-13 19:20:20:2020 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "OFFLINE"
+}
+2026-06-13 19:20:20:2020 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "OFFLINE",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:20:2020 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "deny-offline",
+  "conditionId": "c1",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:20:2020 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "deny-offline",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-13 19:20:20:2020 info: "Added deny policy filter group"
+{
+  "stage": "AST_DENY_POLICY_GROUP",
+  "policyId": "deny-offline",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 0,
+  "denyGroupCount": 1,
+  "residualCount": 0
+}
+2026-06-13 19:20:20:2020 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "Partial-evaluation result returned for default deny/no allow"
+{
+  "stage": "AST_FILTER_RESULT_DEFAULT_DENY",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": null,
+    "excludeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "status",
+          "operator": "equals",
+          "value": "OFFLINE",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "allow",
+    "policyIds": [
+      "deny-offline"
+    ],
+    "warnings": []
+  }
+}
+2026-06-13 19:20:20:2020 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": null,
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "allow",
+  "policyIds": [
+    "deny-offline"
+  ],
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "deny",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-13 19:20:20:2020 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 0,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:20:2020 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 0,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "deny",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:20:2020 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [],
+  "activePolicies": []
+}
+2026-06-13 19:20:20:2020 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 0,
+  "denyCount": 0,
+  "allowPolicyIds": [],
+  "denyPolicyIds": []
+}
+2026-06-13 19:20:20:2020 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": null
+}
+2026-06-13 19:20:20:2020 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 0,
+  "denyGroupCount": 0,
+  "residualCount": 0
+}
+2026-06-13 19:20:20:2020 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "Partial-evaluation result returned for default deny/no allow"
+{
+  "stage": "AST_FILTER_RESULT_DEFAULT_DENY",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": {
+      "type": "condition",
+      "field": "1",
+      "operator": "equals",
+      "value": 0,
+      "sqlCapable": true,
+      "queryCost": "low",
+      "indexSafe": true
+    },
+    "excludeFilter": null,
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "deny",
+    "policyIds": [],
+    "warnings": []
+  }
+}
+2026-06-13 19:20:20:2020 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": {
+    "type": "condition",
+    "field": "1",
+    "operator": "equals",
+    "value": 0,
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "excludeFilter": null,
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "deny",
+  "policyIds": [],
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-13 19:20:20:2020 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 2,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:20:2020 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 2,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "allow",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:20:2020 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [
+    "allow-online",
+    "deny-critical"
+  ],
+  "activePolicies": [
+    {
+      "id": "allow-online",
+      "name": "policy",
+      "effect": "allow",
+      "priority": 100
+    },
+    {
+      "id": "deny-critical",
+      "name": "policy",
+      "effect": "deny",
+      "priority": 100
+    }
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 1,
+  "denyCount": 1,
+  "allowPolicyIds": [
+    "allow-online"
+  ],
+  "denyPolicyIds": [
+    "deny-critical"
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Processing deny policy for partial evaluation"
+{
+  "stage": "AST_DENY_POLICY_START",
+  "policyId": "deny-critical",
+  "policyName": "policy",
+  "hasResourceCondition": true,
+  "conditionCount": 1
+}
+2026-06-13 19:20:20:2020 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "deny-critical",
+  "policyName": "policy",
+  "effect": "deny",
+  "conditionCount": 1
+}
+2026-06-13 19:20:20:2020 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c2",
+  "condition": {
+    "id": "c2",
+    "category": "resource",
+    "attribute": {
+      "key": "severity",
+      "value": "CRITICAL",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "CRITICAL",
+  "result": false
+}
+2026-06-13 19:20:20:2020 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c2"
+}
+2026-06-13 19:20:20:2020 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "CRITICAL"
+}
+2026-06-13 19:20:20:2020 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "CRITICAL"
+}
+2026-06-13 19:20:20:2020 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c2",
+    "category": "resource",
+    "attribute": {
+      "key": "severity",
+      "value": "CRITICAL",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "severity",
+    "operator": "equals",
+    "value": "CRITICAL",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:20:2020 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "deny-critical",
+  "conditionId": "c2",
+  "node": {
+    "type": "condition",
+    "field": "severity",
+    "operator": "equals",
+    "value": "CRITICAL",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:20:2020 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "deny-critical",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-13 19:20:20:2020 info: "Added deny policy filter group"
+{
+  "stage": "AST_DENY_POLICY_GROUP",
+  "policyId": "deny-critical",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "severity",
+        "operator": "equals",
+        "value": "CRITICAL",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "severity",
+        "operator": "equals",
+        "value": "CRITICAL",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Processing allow policy for partial evaluation"
+{
+  "stage": "AST_ALLOW_POLICY_START",
+  "policyId": "allow-online",
+  "policyName": "policy",
+  "conditionCount": 1
+}
+2026-06-13 19:20:20:2020 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "allow-online",
+  "policyName": "policy",
+  "effect": "allow",
+  "conditionCount": 1
+}
+2026-06-13 19:20:20:2020 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c1",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "ONLINE",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "ONLINE",
+  "result": false
+}
+2026-06-13 19:20:20:2020 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c1"
+}
+2026-06-13 19:20:20:2020 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "ONLINE"
+}
+2026-06-13 19:20:20:2020 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "ONLINE"
+}
+2026-06-13 19:20:20:2020 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "ONLINE",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "ONLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:20:2020 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "allow-online",
+  "conditionId": "c1",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "ONLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:20:2020 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "allow-online",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-13 19:20:20:2020 info: "Added allow policy filter group"
+{
+  "stage": "AST_ALLOW_POLICY_GROUP",
+  "policyId": "allow-online",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "ONLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 1,
+  "denyGroupCount": 1,
+  "residualCount": 0
+}
+2026-06-13 19:20:20:2020 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "Built include filter from allow policies"
+{
+  "stage": "AST_INCLUDE_FILTER",
+  "includeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "ONLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Partial-evaluation result returned"
+{
+  "stage": "AST_FILTER_RESULT_FINAL",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "status",
+          "operator": "equals",
+          "value": "ONLINE",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "excludeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "severity",
+          "operator": "equals",
+          "value": "CRITICAL",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "allow",
+    "policyIds": [
+      "allow-online",
+      "deny-critical"
+    ],
+    "warnings": []
+  }
+}
+2026-06-13 19:20:20:2020 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "ONLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "severity",
+        "operator": "equals",
+        "value": "CRITICAL",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "allow",
+  "policyIds": [
+    "allow-online",
+    "deny-critical"
+  ],
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-13 19:20:20:2020 info: "Starting point-in-time access check"
+{
+  "stage": "CAN_START",
+  "resource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "resourceContext": {
+    "groupId": null
+  }
+}
+2026-06-13 19:20:20:2020 info: "Starting access explanation"
+{
+  "stage": "EXPLAIN_ACCESS_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "activePolicyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {
+    "now": "2026-06-13T18:20:20.600Z",
+    "date": "2026-06-13",
+    "dayOfWeek": "Saturday",
+    "currentHHMM": "19:20",
+    "timezone": "Africa/Casablanca"
+  },
+  "resource": {
+    "groupId": null
+  }
+}
+2026-06-13 19:20:20:2020 info: "Evaluating policy condition"
+{
+  "stage": "EVAL_CONDITION_START",
+  "conditionId": "c1",
+  "category": "resource",
+  "attributeKey": "groupId",
+  "operator": "not_equals",
+  "value": "group-1"
+}
+2026-06-13 19:20:20:2020 info: "Resolved condition left value"
+{
+  "stage": "EVAL_CONDITION_LEFT",
+  "conditionId": "c1",
+  "attributeKey": "groupId",
+  "left": null
+}
+2026-06-13 19:20:20:2020 info: "Condition skipped because left value is null"
+{
+  "stage": "EVAL_CONDITION_NULL",
+  "conditionId": "c1",
+  "attributeKey": "groupId"
+}
+2026-06-13 19:20:20:2020 info: "Policy skipped during access explanation"
+{
+  "stage": "EXPLAIN_ACCESS_SKIP",
+  "policy": {
+    "id": "deny-not-group",
+    "name": "policy",
+    "resources": [
+      "devices"
+    ],
+    "actions": [
+      "read"
+    ],
+    "effect": "deny",
+    "conditions": [
+      {
+        "id": "c1",
+        "category": "resource",
+        "attribute": {
+          "key": "groupId",
+          "value": "group-1",
+          "operator": "not_equals"
+        }
+      }
+    ],
+    "conditionLogic": "AND",
+    "priority": 100,
+    "isActive": true
+  },
+  "reason": "condition_failed",
+  "conditionLogic": "AND"
+}
+2026-06-13 19:20:20:2020 info: "Access explanation completed"
+{
+  "stage": "EXPLAIN_ACCESS_RESULT",
+  "decision": {
+    "allowed": true,
+    "reason": "No matching deny policy (default allow)"
+  },
+  "matchedDenyIds": [],
+  "matchedAllowIds": [],
+  "skippedCount": 1
+}
+2026-06-13 19:20:20:2020 info: "Point-in-time access check completed"
+{
+  "stage": "CAN_RESULT",
+  "resource": "devices",
+  "action": "read",
+  "decision": {
+    "allowed": true,
+    "reason": "No matching deny policy (default allow)"
+  }
+}
+2026-06-13 19:20:20:2020 info: "Translating exclude filter to SQL veto parts"
+{
+  "stage": "SQL_EXCLUDE_START",
+  "excludeFilter": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "not_equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-13 19:20:20:2020 info: "Negating filter node for deny policy"
+{
+  "stage": "SQL_NEGATE_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "not_equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-13 19:20:20:2020 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "not_equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0,
+  "col": "\"groupId\""
+}
+2026-06-13 19:20:20:2020 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "not_equals",
+  "fragment": {
+    "sql": "\"groupId\" != $1",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Filter node negation completed"
+{
+  "stage": "SQL_NEGATE_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" != $1)",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Exclude filter SQL translation completed"
+{
+  "stage": "SQL_EXCLUDE_RESULT",
+  "partCount": 1,
+  "parts": [
+    {
+      "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" != $1)",
+      "params": [
+        "group-1"
+      ]
+    }
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Translating exclude filter to SQL veto parts"
+{
+  "stage": "SQL_EXCLUDE_START",
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      },
+      {
+        "type": "condition",
+        "field": "groupId",
+        "operator": "equals",
+        "value": "group-1",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "offset": 0
+}
+2026-06-13 19:20:20:2020 info: "Negating filter node for deny policy"
+{
+  "stage": "SQL_NEGATE_START",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-13 19:20:20:2020 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0,
+  "col": "\"status\""
+}
+2026-06-13 19:20:20:2020 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "equals",
+  "fragment": {
+    "sql": "\"status\" = $1",
+    "params": [
+      "OFFLINE"
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Filter node negation completed"
+{
+  "stage": "SQL_NEGATE_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"status\" IS NULL OR NOT (\"status\" = $1)",
+    "params": [
+      "OFFLINE"
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Negating filter node for deny policy"
+{
+  "stage": "SQL_NEGATE_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 1
+}
+2026-06-13 19:20:20:2020 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 1,
+  "col": "\"groupId\""
+}
+2026-06-13 19:20:20:2020 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "equals",
+  "fragment": {
+    "sql": "\"groupId\" = $2",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Filter node negation completed"
+{
+  "stage": "SQL_NEGATE_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" = $2)",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Exclude filter SQL translation completed"
+{
+  "stage": "SQL_EXCLUDE_RESULT",
+  "partCount": 2,
+  "parts": [
+    {
+      "sql": "\"status\" IS NULL OR NOT (\"status\" = $1)",
+      "params": [
+        "OFFLINE"
+      ]
+    },
+    {
+      "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" = $2)",
+      "params": [
+        "group-1"
+      ]
+    }
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Translating include filter node to SQL"
+{
+  "stage": "SQL_TO_SQL_START",
+  "node": {
+    "type": "condition",
+    "field": "deviceId",
+    "operator": "equals",
+    "value": "device-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-13 19:20:20:2020 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "deviceId",
+    "operator": "equals",
+    "value": "device-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0,
+  "col": "\"deviceId\""
+}
+2026-06-13 19:20:20:2020 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "equals",
+  "fragment": {
+    "sql": "\"deviceId\" = $1",
+    "params": [
+      "device-1"
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Include filter SQL translation completed"
+{
+  "stage": "SQL_TO_SQL_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"deviceId\" = $1",
+    "params": [
+      "device-1"
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-13 19:20:20:2020 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:20:2020 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "allow",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:20:2020 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [
+    "allow-device"
+  ],
+  "activePolicies": [
+    {
+      "id": "allow-device",
+      "name": "policy",
+      "effect": "allow",
+      "priority": 100
+    }
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 1,
+  "denyCount": 0,
+  "allowPolicyIds": [
+    "allow-device"
+  ],
+  "denyPolicyIds": []
+}
+2026-06-13 19:20:20:2020 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": null
+}
+2026-06-13 19:20:20:2020 info: "Processing allow policy for partial evaluation"
+{
+  "stage": "AST_ALLOW_POLICY_START",
+  "policyId": "allow-device",
+  "policyName": "policy",
+  "conditionCount": 1
+}
+2026-06-13 19:20:20:2020 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "allow-device",
+  "policyName": "policy",
+  "effect": "allow",
+  "conditionCount": 1
+}
+2026-06-13 19:20:20:2020 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c1",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "deviceId",
+      "value": "device-1",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-13 19:20:20:2020 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "device-1",
+  "result": false
+}
+2026-06-13 19:20:20:2020 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c1"
+}
+2026-06-13 19:20:20:2020 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "device-1"
+}
+2026-06-13 19:20:20:2020 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "device-1"
+}
+2026-06-13 19:20:20:2020 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "deviceId",
+      "value": "device-1",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "deviceId",
+    "operator": "equals",
+    "value": "device-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:20:2020 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "allow-device",
+  "conditionId": "c1",
+  "node": {
+    "type": "condition",
+    "field": "deviceId",
+    "operator": "equals",
+    "value": "device-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:20:2020 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "allow-device",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-13 19:20:20:2020 info: "Added allow policy filter group"
+{
+  "stage": "AST_ALLOW_POLICY_GROUP",
+  "policyId": "allow-device",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "deviceId",
+        "operator": "equals",
+        "value": "device-1",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 1,
+  "denyGroupCount": 0,
+  "residualCount": 0
+}
+2026-06-13 19:20:20:2020 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-13 19:20:20:2020 info: "Built include filter from allow policies"
+{
+  "stage": "AST_INCLUDE_FILTER",
+  "includeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "deviceId",
+        "operator": "equals",
+        "value": "device-1",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:20:2020 info: "Partial-evaluation result returned"
+{
+  "stage": "AST_FILTER_RESULT_FINAL",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "deviceId",
+          "operator": "equals",
+          "value": "device-1",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "excludeFilter": null,
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "allow",
+    "policyIds": [
+      "allow-device"
+    ],
+    "warnings": []
+  }
+}
+2026-06-13 19:20:20:2020 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "deviceId",
+        "operator": "equals",
+        "value": "device-1",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "excludeFilter": null,
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "allow",
+  "policyIds": [
+    "allow-device"
+  ],
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-13 19:20:52:2052 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:52:2052 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "allow",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:52:2052 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [
+    "deny-offline"
+  ],
+  "activePolicies": [
+    {
+      "id": "deny-offline",
+      "name": "policy",
+      "effect": "deny",
+      "priority": 100
+    }
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 0,
+  "denyCount": 1,
+  "allowPolicyIds": [],
+  "denyPolicyIds": [
+    "deny-offline"
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Processing deny policy for partial evaluation"
+{
+  "stage": "AST_DENY_POLICY_START",
+  "policyId": "deny-offline",
+  "policyName": "policy",
+  "hasResourceCondition": true,
+  "conditionCount": 1
+}
+2026-06-13 19:20:52:2052 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "deny-offline",
+  "policyName": "policy",
+  "effect": "deny",
+  "conditionCount": 1
+}
+2026-06-13 19:20:52:2052 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c1",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "OFFLINE",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "OFFLINE",
+  "result": false
+}
+2026-06-13 19:20:52:2052 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c1"
+}
+2026-06-13 19:20:52:2052 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "OFFLINE"
+}
+2026-06-13 19:20:52:2052 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "OFFLINE"
+}
+2026-06-13 19:20:52:2052 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "OFFLINE",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:52:2052 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "deny-offline",
+  "conditionId": "c1",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:52:2052 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "deny-offline",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-13 19:20:52:2052 info: "Added deny policy filter group"
+{
+  "stage": "AST_DENY_POLICY_GROUP",
+  "policyId": "deny-offline",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 0,
+  "denyGroupCount": 1,
+  "residualCount": 0
+}
+2026-06-13 19:20:52:2052 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "Partial-evaluation result returned for default deny/no allow"
+{
+  "stage": "AST_FILTER_RESULT_DEFAULT_DENY",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": null,
+    "excludeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "status",
+          "operator": "equals",
+          "value": "OFFLINE",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "allow",
+    "policyIds": [
+      "deny-offline"
+    ],
+    "warnings": []
+  }
+}
+2026-06-13 19:20:52:2052 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": null,
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "allow",
+  "policyIds": [
+    "deny-offline"
+  ],
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "deny",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-13 19:20:52:2052 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 0,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:52:2052 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 0,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "deny",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:52:2052 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [],
+  "activePolicies": []
+}
+2026-06-13 19:20:52:2052 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 0,
+  "denyCount": 0,
+  "allowPolicyIds": [],
+  "denyPolicyIds": []
+}
+2026-06-13 19:20:52:2052 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": null
+}
+2026-06-13 19:20:52:2052 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 0,
+  "denyGroupCount": 0,
+  "residualCount": 0
+}
+2026-06-13 19:20:52:2052 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "Partial-evaluation result returned for default deny/no allow"
+{
+  "stage": "AST_FILTER_RESULT_DEFAULT_DENY",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": {
+      "type": "condition",
+      "field": "1",
+      "operator": "equals",
+      "value": 0,
+      "sqlCapable": true,
+      "queryCost": "low",
+      "indexSafe": true
+    },
+    "excludeFilter": null,
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "deny",
+    "policyIds": [],
+    "warnings": []
+  }
+}
+2026-06-13 19:20:52:2052 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": {
+    "type": "condition",
+    "field": "1",
+    "operator": "equals",
+    "value": 0,
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "excludeFilter": null,
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "deny",
+  "policyIds": [],
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-13 19:20:52:2052 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 2,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:52:2052 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 2,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "allow",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:52:2052 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [
+    "allow-online",
+    "deny-critical"
+  ],
+  "activePolicies": [
+    {
+      "id": "allow-online",
+      "name": "policy",
+      "effect": "allow",
+      "priority": 100
+    },
+    {
+      "id": "deny-critical",
+      "name": "policy",
+      "effect": "deny",
+      "priority": 100
+    }
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 1,
+  "denyCount": 1,
+  "allowPolicyIds": [
+    "allow-online"
+  ],
+  "denyPolicyIds": [
+    "deny-critical"
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Processing deny policy for partial evaluation"
+{
+  "stage": "AST_DENY_POLICY_START",
+  "policyId": "deny-critical",
+  "policyName": "policy",
+  "hasResourceCondition": true,
+  "conditionCount": 1
+}
+2026-06-13 19:20:52:2052 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "deny-critical",
+  "policyName": "policy",
+  "effect": "deny",
+  "conditionCount": 1
+}
+2026-06-13 19:20:52:2052 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c2",
+  "condition": {
+    "id": "c2",
+    "category": "resource",
+    "attribute": {
+      "key": "severity",
+      "value": "CRITICAL",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "CRITICAL",
+  "result": false
+}
+2026-06-13 19:20:52:2052 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c2"
+}
+2026-06-13 19:20:52:2052 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "CRITICAL"
+}
+2026-06-13 19:20:52:2052 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "CRITICAL"
+}
+2026-06-13 19:20:52:2052 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c2",
+    "category": "resource",
+    "attribute": {
+      "key": "severity",
+      "value": "CRITICAL",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "severity",
+    "operator": "equals",
+    "value": "CRITICAL",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:52:2052 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "deny-critical",
+  "conditionId": "c2",
+  "node": {
+    "type": "condition",
+    "field": "severity",
+    "operator": "equals",
+    "value": "CRITICAL",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:52:2052 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "deny-critical",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-13 19:20:52:2052 info: "Added deny policy filter group"
+{
+  "stage": "AST_DENY_POLICY_GROUP",
+  "policyId": "deny-critical",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "severity",
+        "operator": "equals",
+        "value": "CRITICAL",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "severity",
+        "operator": "equals",
+        "value": "CRITICAL",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Processing allow policy for partial evaluation"
+{
+  "stage": "AST_ALLOW_POLICY_START",
+  "policyId": "allow-online",
+  "policyName": "policy",
+  "conditionCount": 1
+}
+2026-06-13 19:20:52:2052 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "allow-online",
+  "policyName": "policy",
+  "effect": "allow",
+  "conditionCount": 1
+}
+2026-06-13 19:20:52:2052 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c1",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "ONLINE",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "ONLINE",
+  "result": false
+}
+2026-06-13 19:20:52:2052 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c1"
+}
+2026-06-13 19:20:52:2052 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "ONLINE"
+}
+2026-06-13 19:20:52:2052 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "ONLINE"
+}
+2026-06-13 19:20:52:2052 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "status",
+      "value": "ONLINE",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "ONLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:52:2052 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "allow-online",
+  "conditionId": "c1",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "ONLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:52:2052 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "allow-online",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-13 19:20:52:2052 info: "Added allow policy filter group"
+{
+  "stage": "AST_ALLOW_POLICY_GROUP",
+  "policyId": "allow-online",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "ONLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 1,
+  "denyGroupCount": 1,
+  "residualCount": 0
+}
+2026-06-13 19:20:52:2052 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "Built include filter from allow policies"
+{
+  "stage": "AST_INCLUDE_FILTER",
+  "includeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "ONLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Partial-evaluation result returned"
+{
+  "stage": "AST_FILTER_RESULT_FINAL",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "status",
+          "operator": "equals",
+          "value": "ONLINE",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "excludeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "severity",
+          "operator": "equals",
+          "value": "CRITICAL",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "allow",
+    "policyIds": [
+      "allow-online",
+      "deny-critical"
+    ],
+    "warnings": []
+  }
+}
+2026-06-13 19:20:52:2052 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "ONLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "severity",
+        "operator": "equals",
+        "value": "CRITICAL",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "allow",
+  "policyIds": [
+    "allow-online",
+    "deny-critical"
+  ],
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-13 19:20:52:2052 info: "Starting point-in-time access check"
+{
+  "stage": "CAN_START",
+  "resource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "resourceContext": {
+    "groupId": null
+  }
+}
+2026-06-13 19:20:52:2052 info: "Starting access explanation"
+{
+  "stage": "EXPLAIN_ACCESS_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "activePolicyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {
+    "now": "2026-06-13T18:20:52.380Z",
+    "date": "2026-06-13",
+    "dayOfWeek": "Saturday",
+    "currentHHMM": "19:20",
+    "timezone": "Africa/Casablanca"
+  },
+  "resource": {
+    "groupId": null
+  }
+}
+2026-06-13 19:20:52:2052 info: "Evaluating policy condition"
+{
+  "stage": "EVAL_CONDITION_START",
+  "conditionId": "c1",
+  "category": "resource",
+  "attributeKey": "groupId",
+  "operator": "not_equals",
+  "value": "group-1"
+}
+2026-06-13 19:20:52:2052 info: "Resolved condition left value"
+{
+  "stage": "EVAL_CONDITION_LEFT",
+  "conditionId": "c1",
+  "attributeKey": "groupId",
+  "left": null
+}
+2026-06-13 19:20:52:2052 info: "Condition skipped because left value is null"
+{
+  "stage": "EVAL_CONDITION_NULL",
+  "conditionId": "c1",
+  "attributeKey": "groupId"
+}
+2026-06-13 19:20:52:2052 info: "Policy skipped during access explanation"
+{
+  "stage": "EXPLAIN_ACCESS_SKIP",
+  "policy": {
+    "id": "deny-not-group",
+    "name": "policy",
+    "resources": [
+      "devices"
+    ],
+    "actions": [
+      "read"
+    ],
+    "effect": "deny",
+    "conditions": [
+      {
+        "id": "c1",
+        "category": "resource",
+        "attribute": {
+          "key": "groupId",
+          "value": "group-1",
+          "operator": "not_equals"
+        }
+      }
+    ],
+    "conditionLogic": "AND",
+    "priority": 100,
+    "isActive": true
+  },
+  "reason": "condition_failed",
+  "conditionLogic": "AND"
+}
+2026-06-13 19:20:52:2052 info: "Access explanation completed"
+{
+  "stage": "EXPLAIN_ACCESS_RESULT",
+  "decision": {
+    "allowed": true,
+    "reason": "No matching deny policy (default allow)"
+  },
+  "matchedDenyIds": [],
+  "matchedAllowIds": [],
+  "skippedCount": 1
+}
+2026-06-13 19:20:52:2052 info: "Point-in-time access check completed"
+{
+  "stage": "CAN_RESULT",
+  "resource": "devices",
+  "action": "read",
+  "decision": {
+    "allowed": true,
+    "reason": "No matching deny policy (default allow)"
+  }
+}
+2026-06-13 19:20:52:2052 info: "Translating exclude filter to SQL veto parts"
+{
+  "stage": "SQL_EXCLUDE_START",
+  "excludeFilter": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "not_equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-13 19:20:52:2052 info: "Negating filter node for deny policy"
+{
+  "stage": "SQL_NEGATE_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "not_equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-13 19:20:52:2052 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "not_equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0,
+  "col": "\"groupId\""
+}
+2026-06-13 19:20:52:2052 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "not_equals",
+  "fragment": {
+    "sql": "\"groupId\" != $1",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Filter node negation completed"
+{
+  "stage": "SQL_NEGATE_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" != $1)",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Exclude filter SQL translation completed"
+{
+  "stage": "SQL_EXCLUDE_RESULT",
+  "partCount": 1,
+  "parts": [
+    {
+      "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" != $1)",
+      "params": [
+        "group-1"
+      ]
+    }
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Translating exclude filter to SQL veto parts"
+{
+  "stage": "SQL_EXCLUDE_START",
+  "excludeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "status",
+        "operator": "equals",
+        "value": "OFFLINE",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      },
+      {
+        "type": "condition",
+        "field": "groupId",
+        "operator": "equals",
+        "value": "group-1",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "offset": 0
+}
+2026-06-13 19:20:52:2052 info: "Negating filter node for deny policy"
+{
+  "stage": "SQL_NEGATE_START",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-13 19:20:52:2052 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "status",
+    "operator": "equals",
+    "value": "OFFLINE",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0,
+  "col": "\"status\""
+}
+2026-06-13 19:20:52:2052 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "equals",
+  "fragment": {
+    "sql": "\"status\" = $1",
+    "params": [
+      "OFFLINE"
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Filter node negation completed"
+{
+  "stage": "SQL_NEGATE_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"status\" IS NULL OR NOT (\"status\" = $1)",
+    "params": [
+      "OFFLINE"
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Negating filter node for deny policy"
+{
+  "stage": "SQL_NEGATE_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 1
+}
+2026-06-13 19:20:52:2052 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "groupId",
+    "operator": "equals",
+    "value": "group-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 1,
+  "col": "\"groupId\""
+}
+2026-06-13 19:20:52:2052 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "equals",
+  "fragment": {
+    "sql": "\"groupId\" = $2",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Filter node negation completed"
+{
+  "stage": "SQL_NEGATE_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" = $2)",
+    "params": [
+      "group-1"
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Exclude filter SQL translation completed"
+{
+  "stage": "SQL_EXCLUDE_RESULT",
+  "partCount": 2,
+  "parts": [
+    {
+      "sql": "\"status\" IS NULL OR NOT (\"status\" = $1)",
+      "params": [
+        "OFFLINE"
+      ]
+    },
+    {
+      "sql": "\"groupId\" IS NULL OR NOT (\"groupId\" = $2)",
+      "params": [
+        "group-1"
+      ]
+    }
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Translating include filter node to SQL"
+{
+  "stage": "SQL_TO_SQL_START",
+  "node": {
+    "type": "condition",
+    "field": "deviceId",
+    "operator": "equals",
+    "value": "device-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0
+}
+2026-06-13 19:20:52:2052 info: "Translating condition node to SQL"
+{
+  "stage": "SQL_CONDITION_START",
+  "node": {
+    "type": "condition",
+    "field": "deviceId",
+    "operator": "equals",
+    "value": "device-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  },
+  "offset": 0,
+  "col": "\"deviceId\""
+}
+2026-06-13 19:20:52:2052 info: "Condition SQL translation completed"
+{
+  "stage": "SQL_CONDITION_RESULT",
+  "operator": "equals",
+  "fragment": {
+    "sql": "\"deviceId\" = $1",
+    "params": [
+      "device-1"
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Include filter SQL translation completed"
+{
+  "stage": "SQL_TO_SQL_RESULT",
+  "nodeType": "condition",
+  "fragment": {
+    "sql": "\"deviceId\" = $1",
+    "params": [
+      "device-1"
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "ABAC instance initialized"
+{
+  "stage": "ABAC_INIT",
+  "defaultEffect": "allow",
+  "resourceCount": 1,
+  "actionCount": 6,
+  "subjectAttributeCount": 14,
+  "environmentAttributeCount": 14,
+  "resourceAttributeCount": 8
+}
+2026-06-13 19:20:52:2052 info: "Starting partial evaluation"
+{
+  "stage": "PARTIAL_EVAL_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:52:2052 info: "Building partial-evaluation filter result"
+{
+  "stage": "AST_BUILD_FILTER_RESULT_START",
+  "targetResource": "devices",
+  "action": "read",
+  "policyCount": 1,
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ],
+  "defaultEffect": "allow",
+  "subject": {
+    "userId": "u1"
+  },
+  "environment": {}
+}
+2026-06-13 19:20:52:2052 info: "Active policies selected for target resource/action"
+{
+  "stage": "AST_ACTIVE_POLICIES",
+  "targetResource": "devices",
+  "action": "read",
+  "activePolicyIds": [
+    "allow-device"
+  ],
+  "activePolicies": [
+    {
+      "id": "allow-device",
+      "name": "policy",
+      "effect": "allow",
+      "priority": 100
+    }
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Active policies split by effect"
+{
+  "stage": "AST_POLICY_SPLIT",
+  "allowCount": 1,
+  "denyCount": 0,
+  "allowPolicyIds": [
+    "allow-device"
+  ],
+  "denyPolicyIds": []
+}
+2026-06-13 19:20:52:2052 info: "Built exclude filter from deny policies"
+{
+  "stage": "AST_EXCLUDE_FILTER",
+  "excludeFilter": null
+}
+2026-06-13 19:20:52:2052 info: "Processing allow policy for partial evaluation"
+{
+  "stage": "AST_ALLOW_POLICY_START",
+  "policyId": "allow-device",
+  "policyName": "policy",
+  "conditionCount": 1
+}
+2026-06-13 19:20:52:2052 info: "Processing policy conditions"
+{
+  "stage": "AST_PROCESS_POLICY_START",
+  "policyId": "allow-device",
+  "policyName": "policy",
+  "effect": "allow",
+  "conditionCount": 1
+}
+2026-06-13 19:20:52:2052 info: "Checking if condition can be pushed to SQL"
+{
+  "stage": "AST_SQL_CAPABLE_START",
+  "conditionId": "c1",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "deviceId",
+      "value": "device-1",
+      "operator": "equals"
+    }
+  },
+  "knownResourceFields": [
+    "tenantId",
+    "deviceId",
+    "ownerId",
+    "status",
+    "severity",
+    "groupId",
+    "isEditable",
+    "createdAt"
+  ]
+}
+2026-06-13 19:20:52:2052 info: "Checked context variable pattern"
+{
+  "stage": "RESOLVER_IS_CONTEXT_VARIABLE",
+  "value": "device-1",
+  "result": false
+}
+2026-06-13 19:20:52:2052 info: "Condition marked SQL capable"
+{
+  "stage": "AST_SQL_CAPABLE_RESULT",
+  "conditionId": "c1"
+}
+2026-06-13 19:20:52:2052 info: "Resolving policy value at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_START",
+  "value": "device-1"
+}
+2026-06-13 19:20:52:2052 info: "Policy value kept as literal at plan time"
+{
+  "stage": "AST_RESOLVE_PLAN_TIME_RESULT",
+  "value": "device-1"
+}
+2026-06-13 19:20:52:2052 info: "Built SQL filter node"
+{
+  "stage": "AST_BUILD_FILTER_NODE",
+  "condition": {
+    "id": "c1",
+    "category": "resource",
+    "attribute": {
+      "key": "deviceId",
+      "value": "device-1",
+      "operator": "equals"
+    }
+  },
+  "node": {
+    "type": "condition",
+    "field": "deviceId",
+    "operator": "equals",
+    "value": "device-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:52:2052 info: "Added SQL-capable condition node"
+{
+  "stage": "AST_PROCESS_POLICY_SQL_NODE",
+  "policyId": "allow-device",
+  "conditionId": "c1",
+  "node": {
+    "type": "condition",
+    "field": "deviceId",
+    "operator": "equals",
+    "value": "device-1",
+    "sqlCapable": true,
+    "queryCost": "low",
+    "indexSafe": true
+  }
+}
+2026-06-13 19:20:52:2052 info: "Policy condition processing completed"
+{
+  "stage": "AST_PROCESS_POLICY_RESULT",
+  "policyId": "allow-device",
+  "sqlNodeCount": 1,
+  "residualCount": 0,
+  "isComplete": true
+}
+2026-06-13 19:20:52:2052 info: "Added allow policy filter group"
+{
+  "stage": "AST_ALLOW_POLICY_GROUP",
+  "policyId": "allow-device",
+  "policyName": "policy",
+  "group": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "deviceId",
+        "operator": "equals",
+        "value": "device-1",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Building policy warnings"
+{
+  "stage": "AST_BUILD_WARNINGS_START",
+  "policyGroupCount": 1,
+  "denyGroupCount": 0,
+  "residualCount": 0
+}
+2026-06-13 19:20:52:2052 info: "Policy warnings built"
+{
+  "stage": "AST_BUILD_WARNINGS_RESULT",
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "Partial-evaluation warnings assembled"
+{
+  "stage": "AST_FILTER_RESULT_WARNINGS",
+  "warnings": []
+}
+2026-06-13 19:20:52:2052 info: "Built include filter from allow policies"
+{
+  "stage": "AST_INCLUDE_FILTER",
+  "includeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "deviceId",
+        "operator": "equals",
+        "value": "device-1",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  }
+}
+2026-06-13 19:20:52:2052 info: "Partial-evaluation result returned"
+{
+  "stage": "AST_FILTER_RESULT_FINAL",
+  "result": {
+    "schemaVersion": 1,
+    "includeFilter": {
+      "type": "group",
+      "logic": "AND",
+      "conditions": [
+        {
+          "type": "condition",
+          "field": "deviceId",
+          "operator": "equals",
+          "value": "device-1",
+          "sqlCapable": true,
+          "queryCost": "low",
+          "indexSafe": true
+        }
+      ]
+    },
+    "excludeFilter": null,
+    "requiresVerification": false,
+    "residualConditions": [],
+    "defaultEffect": "allow",
+    "policyIds": [
+      "allow-device"
+    ],
+    "warnings": []
+  }
+}
+2026-06-13 19:20:52:2052 info: "Partial evaluation completed"
+{
+  "stage": "PARTIAL_EVAL_RESULT",
+  "targetResource": "devices",
+  "includeFilter": {
+    "type": "group",
+    "logic": "AND",
+    "conditions": [
+      {
+        "type": "condition",
+        "field": "deviceId",
+        "operator": "equals",
+        "value": "device-1",
+        "sqlCapable": true,
+        "queryCost": "low",
+        "indexSafe": true
+      }
+    ]
+  },
+  "excludeFilter": null,
+  "requiresVerification": false,
+  "residualCount": 0,
+  "defaultEffect": "allow",
+  "policyIds": [
+    "allow-device"
+  ],
+  "warnings": []
+}

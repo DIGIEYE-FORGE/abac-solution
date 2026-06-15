@@ -33,6 +33,7 @@ import {
 import { compare } from "./utils/operators";
 import { resolveValue, isContextVariable } from "./utils/resolver";
 import { buildFilterResult } from "./utils/ast-builder";
+import { logAbac } from "./utils/logger";
 
 export class ABAC {
   readonly attributes: {
@@ -69,6 +70,15 @@ export class ABAC {
     this.resources = config?.resources ?? DEFAULT_RESOURCES;
     this.actions = config?.actions ?? DEFAULT_ACTIONS;
     this.defaultEffect = config?.defaultEffect ?? "deny";
+
+    logAbac("ABAC_INIT", "ABAC instance initialized", {
+      defaultEffect: this.defaultEffect,
+      resourceCount: this.resources.length,
+      actionCount: this.actions.length,
+      subjectAttributeCount: this.attributes.subject.length,
+      environmentAttributeCount: this.attributes.environment.length,
+      resourceAttributeCount: this.attributes.resource.length,
+    });
 
     this._resolverMap = new Map(this.environmentResolvers.map((r) => [r.key, r]));
     this._attrMap = {
@@ -222,27 +232,107 @@ export class ABAC {
 
 
   evaluateCondition(condition: PolicyCondition, context: EvaluationContext): boolean {
-    const { category, attribute } = condition;
-    if (category !== "subject" && category !== "environment" && category !== "resource") return true;
+    const normalizedCondition = normalizePolicyCondition(condition);
+    const { category, attribute } = normalizedCondition;
+    logAbac("EVAL_CONDITION_START", "Evaluating policy condition", {
+      conditionId: condition.id,
+      category,
+      attributeKey: attribute.key,
+      operator: attribute.operator,
+      value: attribute.value,
+      external: condition.external,
+    });
+
+    if (category !== "subject" && category !== "environment" && category !== "resource") {
+      logAbac("EVAL_CONDITION_SKIP", "Condition skipped because category is invalid", { conditionId: condition.id, category });
+      return true;
+    }
 
     const bucket = category === "resource" ? context.resource : context[category];
-    if (!bucket || typeof bucket !== "object") return false;
+    if (!bucket || typeof bucket !== "object") {
+      logAbac("EVAL_CONDITION_SKIP", "Condition skipped because context bucket is missing", { conditionId: condition.id, category });
+      return false;
+    }
 
     const left = (bucket as Record<string, unknown>)[attribute.key];
-    if (left === undefined) return false;
+    logAbac("EVAL_CONDITION_LEFT", "Resolved condition left value", {
+      conditionId: condition.id,
+      attributeKey: attribute.key,
+      left,
+    });
+
+    if (left == null) {
+      logAbac("EVAL_CONDITION_NULL", "Condition skipped because left value is null", {
+        conditionId: condition.id,
+        attributeKey: attribute.key,
+      });
+      return false;
+    }
 
     const resolved = resolveValue(attribute.value, context, this._resolverMap);
-    return compare(left, resolved, attribute.operator);
+    logAbac("EVAL_CONDITION_RIGHT", "Resolved condition right value", {
+      conditionId: condition.id,
+      operator: attribute.operator,
+      rawValue: attribute.value,
+      resolved,
+    });
+
+    const result = compare(left, resolved, attribute.operator);
+    logAbac("EVAL_CONDITION_RESULT", "Condition evaluation completed", {
+      conditionId: condition.id,
+      operator: attribute.operator,
+      left,
+      right: resolved,
+      result,
+    });
+    return result;
   }
 
   evaluatePolicy(policy: Policy, context: EvaluationContext, targetResource: string): boolean {
-    if (!policy.resources.includes("*") && !policy.resources.includes(targetResource)) return false;
-    if (!policy.actions.includes("*") && !policy.actions.includes(context.action)) return false;
-    if (policy.conditions.length === 0) return true;
+    const normalizedPolicy = normalizePolicy(policy);
+    logAbac("EVAL_POLICY_START", "Evaluating policy match", {
+      policyId: normalizedPolicy.id,
+      policyName: normalizedPolicy.name,
+      effect: normalizedPolicy.effect,
+      priority: normalizedPolicy.priority,
+      targetResource,
+      action: context.action,
+    });
 
-    return policy.conditionLogic === "OR"
-      ? policy.conditions.some((c) => this.evaluateCondition(c, context))
-      : policy.conditions.every((c) => this.evaluateCondition(c, context));
+    if (!normalizedPolicy.resources.includes("*") && !normalizedPolicy.resources.includes(targetResource)) {
+      logAbac("EVAL_POLICY_SKIP", "Policy skipped due to resource mismatch", {
+        policyId: normalizedPolicy.id,
+        policyName: normalizedPolicy.name,
+        policyResources: normalizedPolicy.resources,
+        targetResource,
+      });
+      return false;
+    }
+    if (!normalizedPolicy.actions.includes("*") && !normalizedPolicy.actions.includes(context.action)) {
+      logAbac("EVAL_POLICY_SKIP", "Policy skipped due to action mismatch", {
+        policyId: normalizedPolicy.id,
+        policyName: normalizedPolicy.name,
+        policyActions: normalizedPolicy.actions,
+        action: context.action,
+      });
+      return false;
+    }
+    if (normalizedPolicy.conditions.length === 0) {
+      logAbac("EVAL_POLICY_MATCH", "Unconditional policy matched", { policyId: normalizedPolicy.id, policyName: normalizedPolicy.name });
+      return true;
+    }
+
+    const conditionsMet = normalizedPolicy.conditionLogic === "OR"
+      ? normalizedPolicy.conditions.some((c) => this.evaluateCondition(c, context))
+      : normalizedPolicy.conditions.every((c) => this.evaluateCondition(c, context));
+
+    logAbac("EVAL_POLICY_RESULT", "Policy evaluation completed", {
+      policyId: normalizedPolicy.id,
+      policyName: normalizedPolicy.name,
+      conditionLogic: normalizedPolicy.conditionLogic,
+      conditionsMet,
+    });
+    return conditionsMet;
   }
 
   evaluateAccess(policies: Policy[], context: EvaluationContext, targetResource: string): AccessDecision {
@@ -250,26 +340,66 @@ export class ABAC {
   }
 
   explainAccess(policies: Policy[], context: EvaluationContext, targetResource: string): AccessExplanation {
-    const sorted = policies.filter((p) => p.isActive).sort((a, b) => b.priority - a.priority);
+    const sorted = policies.map(normalizePolicy).filter((p) => p.isActive).sort((a, b) => b.priority - a.priority);
+    logAbac("EXPLAIN_ACCESS_START", "Starting access explanation", {
+      targetResource,
+      action: context.action,
+      policyCount: policies.length,
+      activePolicyCount: sorted.length,
+      subject: context.subject,
+      environment: context.environment,
+      resource: context.resource,
+    });
+
     const matchedDenies: Policy[] = [];
     const matchedAllows: Policy[] = [];
     const skipped: SkippedPolicy[] = [];
 
     for (const p of sorted) {
       const resourceMatch = p.resources.includes("*") || p.resources.includes(targetResource);
-      if (!resourceMatch) { skipped.push({ policy: p, reason: "resource_mismatch" }); continue; }
+      if (!resourceMatch) {
+        const skip = { policy: p, reason: "resource_mismatch" as const };
+        skipped.push(skip);
+        logAbac("EXPLAIN_ACCESS_SKIP", "Policy skipped during access explanation", {
+          ...skip,
+          targetResource,
+        });
+        continue;
+      }
 
       const actionMatch = p.actions.includes("*") || p.actions.includes(context.action);
-      if (!actionMatch) { skipped.push({ policy: p, reason: "action_mismatch" }); continue; }
+      if (!actionMatch) {
+        const skip = { policy: p, reason: "action_mismatch" as const };
+        skipped.push(skip);
+        logAbac("EXPLAIN_ACCESS_SKIP", "Policy skipped during access explanation", {
+          ...skip,
+          action: context.action,
+        });
+        continue;
+      }
 
       const conditionsMet = p.conditions.length === 0 || (
         p.conditionLogic === "OR"
           ? p.conditions.some((c) => this.evaluateCondition(c, context))
           : p.conditions.every((c) => this.evaluateCondition(c, context))
       );
-      if (!conditionsMet) { skipped.push({ policy: p, reason: "condition_failed" }); continue; }
+      if (!conditionsMet) {
+        const skip = { policy: p, reason: "condition_failed" as const };
+        skipped.push(skip);
+        logAbac("EXPLAIN_ACCESS_SKIP", "Policy skipped during access explanation", {
+          ...skip,
+          conditionLogic: p.conditionLogic,
+        });
+        continue;
+      }
 
       (p.effect === "deny" ? matchedDenies : matchedAllows).push(p);
+      logAbac("EXPLAIN_ACCESS_MATCH", "Policy matched during access explanation", {
+        policyId: p.id,
+        policyName: p.name,
+        effect: p.effect,
+        priority: p.priority,
+      });
     }
 
     let decision: AccessDecision;
@@ -296,6 +426,13 @@ export class ABAC {
       };
     }
 
+    logAbac("EXPLAIN_ACCESS_RESULT", "Access explanation completed", {
+      decision,
+      matchedDenyIds: matchedDenies.map((p) => p.id),
+      matchedAllowIds: matchedAllows.map((p) => p.id),
+      skippedCount: skipped.length,
+    });
+
     return { decision, matchedDenies, matchedAllows, skipped };
   }
 
@@ -307,14 +444,35 @@ export class ABAC {
     context: Omit<EvaluationContext, "resource">,
     targetResource: string,
   ): FilterResult {
+    logAbac("PARTIAL_EVAL_START", "Starting partial evaluation", {
+      targetResource,
+      action: context.action,
+      policyCount: policies.length,
+      subject: context.subject,
+      environment: context.environment,
+    });
+
+    const normalizedPolicies = policies.map(normalizePolicy);
     const knownFields = new Set(this.attributes.resource.map((a) => a.key));
-    return buildFilterResult(
-      policies,
+    const result = buildFilterResult(
+      normalizedPolicies,
       context as EvaluationContext,
       targetResource,
       knownFields,
       this.defaultEffect,
     );
+
+    logAbac("PARTIAL_EVAL_RESULT", "Partial evaluation completed", {
+      targetResource,
+      includeFilter: result.includeFilter,
+      excludeFilter: result.excludeFilter,
+      requiresVerification: result.requiresVerification,
+      residualCount: result.residualConditions.length,
+      defaultEffect: result.defaultEffect,
+      policyIds: result.policyIds,
+      warnings: result.warnings,
+    });
+    return result;
   }
 
 
@@ -326,14 +484,51 @@ export class ABAC {
     environment?: Record<string, unknown>;
     resourceContext?: Record<string, unknown>;
   }): AccessDecision {
+    logAbac("CAN_START", "Starting point-in-time access check", {
+      resource: params.resource,
+      action: params.action,
+      policyCount: params.policies.length,
+      subject: params.subject,
+      environment: params.environment,
+      resourceContext: params.resourceContext,
+    });
+
     const context: EvaluationContext = {
       subject: params.subject,
       action: params.action,
       environment: params.environment ?? this.buildEnvironmentContext(),
       resource: params.resourceContext,
     };
-    return this.evaluateAccess(params.policies, context, params.resource);
+    const decision = this.evaluateAccess(params.policies, context, params.resource);
+
+    logAbac("CAN_RESULT", "Point-in-time access check completed", {
+      resource: params.resource,
+      action: params.action,
+      decision,
+    });
+    return decision;
   }
+}
+
+function normalizeAttributeKey(key: string): string {
+  return key === "deviceID" ? "deviceId" : key;
+}
+
+function normalizePolicyCondition(condition: PolicyCondition): PolicyCondition {
+  return {
+    ...condition,
+    attribute: {
+      ...condition.attribute,
+      key: normalizeAttributeKey(condition.attribute.key),
+    },
+  };
+}
+
+function normalizePolicy(policy: Policy): Policy {
+  return {
+    ...policy,
+    conditions: policy.conditions.map(normalizePolicyCondition),
+  };
 }
 
 function mergeResolvers(

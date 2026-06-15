@@ -1,4 +1,5 @@
 import type { FilterNode, FilterGroup, ConditionValue } from "../types";
+import { logAbac } from "./logger";
 
 export interface SqlFragment {
   sql: string;
@@ -13,8 +14,10 @@ export interface SqlFragment {
 // @param offset - Parameter index offset for recursive calls. Always pass 0 externally.
 
 export function toSql(node: FilterNode | FilterGroup, offset = 0): SqlFragment {
-  if (node.type === "condition") return conditionToSql(node, offset);
-  return groupToSql(node, offset);
+  logAbac("SQL_TO_SQL_START", "Translating include filter node to SQL", { node, offset });
+  const fragment = node.type === "condition" ? conditionToSql(node, offset) : groupToSql(node, offset);
+  logAbac("SQL_TO_SQL_RESULT", "Include filter SQL translation completed", { nodeType: node.type, fragment });
+  return fragment;
 }
 
 // ── excludeToSqlParts ────────────────────────────────────────────────────────
@@ -32,27 +35,53 @@ export function excludeToSqlParts(
   excludeFilter: FilterNode | FilterGroup,
   offset = 0,
 ): SqlFragment[] {
-  // Single condition node
-  if (excludeFilter.type === "condition") {
-    const { sql, params } = conditionToSql(excludeFilter, offset);
-    return [{ sql: `NOT (${sql})`, params }];
-  }
+  logAbac("SQL_EXCLUDE_START", "Translating exclude filter to SQL veto parts", { excludeFilter, offset });
+  let parts: SqlFragment[];
 
-  // AND group = multiple deny policies, each child is one policy — wrap each independently
-  if (excludeFilter.logic === "AND" && excludeFilter.conditions.length > 0) {
-    const parts: SqlFragment[] = [];
+  if (excludeFilter.type === "condition") {
+    parts = [negateFilterToSql(excludeFilter, offset)];
+  } else if (excludeFilter.logic === "AND" && excludeFilter.conditions.length > 0) {
+    parts = [];
     let currentOffset = offset;
     for (const child of excludeFilter.conditions) {
-      const { sql, params } = toSql(child, currentOffset);
-      parts.push({ sql: `NOT (${sql})`, params });
-      currentOffset += params.length;
+      const fragment = negateFilterToSql(child, currentOffset);
+      parts.push(fragment);
+      currentOffset += fragment.params.length;
     }
-    return parts;
+  } else {
+    parts = [negateFilterToSql(excludeFilter, offset)];
   }
 
-  // OR group = single deny policy with OR-logic conditions — wrap the whole thing
-  const { sql, params } = toSql(excludeFilter, offset);
-  return [{ sql: `NOT (${sql})`, params }];
+  logAbac("SQL_EXCLUDE_RESULT", "Exclude filter SQL translation completed", { partCount: parts.length, parts });
+  return parts;
+}
+
+function negateFilterToSql(node: FilterNode | FilterGroup, offset: number): SqlFragment {
+  logAbac("SQL_NEGATE_START", "Negating filter node for deny policy", { node, offset });
+  let fragment: SqlFragment;
+
+  if (node.type === "condition") {
+    const { sql, params } = conditionToSql(node, offset);
+    fragment = { sql: `"${node.field}" IS NULL OR NOT (${sql})`, params };
+  } else if (node.conditions.length === 0) {
+    fragment = { sql: "1=1", params: [] };
+  } else if (node.conditions.length === 1) {
+    fragment = negateFilterToSql(node.conditions[0]!, offset);
+  } else {
+    const parts: string[] = [];
+    const allParams: unknown[] = [];
+    for (const child of node.conditions) {
+      const childFragment = negateFilterToSql(child, offset + allParams.length);
+      parts.push(childFragment.sql);
+      allParams.push(...childFragment.params);
+    }
+
+    const joinWord = node.logic === "OR" ? " AND " : " OR ";
+    fragment = { sql: parts.join(joinWord), params: allParams };
+  }
+
+  logAbac("SQL_NEGATE_RESULT", "Filter node negation completed", { nodeType: node.type, fragment });
+  return fragment;
 }
 
 // ── internals ────────────────────────────────────────────────────────────────
@@ -60,69 +89,94 @@ export function excludeToSqlParts(
 function conditionToSql(node: FilterNode, offset: number): SqlFragment {
   const idx = offset + 1;
   const col = `"${node.field}"`;
+  logAbac("SQL_CONDITION_START", "Translating condition node to SQL", { node, offset, col });
 
+  let fragment: SqlFragment;
   switch (node.operator) {
     case "equals":
-      return { sql: `${col} = $${idx}`, params: [node.value] };
+      fragment = { sql: `${col} = $${idx}`, params: [node.value] };
+      break;
     case "not_equals":
-      return { sql: `${col} != $${idx}`, params: [node.value] };
+      fragment = { sql: `${col} != $${idx}`, params: [node.value] };
+      break;
     case "greater_than":
-      return { sql: `${col} > $${idx}`, params: [node.value] };
+      fragment = { sql: `${col} > $${idx}`, params: [node.value] };
+      break;
     case "less_than":
-      return { sql: `${col} < $${idx}`, params: [node.value] };
+      fragment = { sql: `${col} < $${idx}`, params: [node.value] };
+      break;
     case "greater_than_or_equal":
-      return { sql: `${col} >= $${idx}`, params: [node.value] };
+      fragment = { sql: `${col} >= $${idx}`, params: [node.value] };
+      break;
     case "less_than_or_equal":
-      return { sql: `${col} <= $${idx}`, params: [node.value] };
+      fragment = { sql: `${col} <= $${idx}`, params: [node.value] };
+      break;
     case "contains":
-      return { sql: `${col} LIKE $${idx}`, params: [`%${node.value}%`] };
+      fragment = { sql: `${col} LIKE $${idx}`, params: [`%${node.value}%`] };
+      break;
     case "not_contains":
-      return { sql: `${col} NOT LIKE $${idx}`, params: [`%${node.value}%`] };
+      fragment = { sql: `${col} NOT LIKE $${idx}`, params: [`%${node.value}%`] };
+      break;
     case "starts_with":
-      return { sql: `${col} LIKE $${idx}`, params: [`${node.value}%`] };
+      fragment = { sql: `${col} LIKE $${idx}`, params: [`${node.value}%`] };
+      break;
     case "ends_with":
-      return { sql: `${col} LIKE $${idx}`, params: [`%${node.value}`] };
+      fragment = { sql: `${col} LIKE $${idx}`, params: [`${node.value}`] };
+      break;
     case "in": {
       const vals = Array.isArray(node.value) ? node.value : [node.value];
       const placeholders = (vals as ConditionValue[]).map((_, i) => `$${offset + i + 1}`).join(", ");
-      return { sql: `${col} IN (${placeholders})`, params: vals };
+      fragment = { sql: `${col} IN (${placeholders})`, params: vals };
+      break;
     }
     case "not_in": {
       const vals = Array.isArray(node.value) ? node.value : [node.value];
       const placeholders = (vals as ConditionValue[]).map((_, i) => `$${offset + i + 1}`).join(", ");
-      return { sql: `${col} NOT IN (${placeholders})`, params: vals };
+      fragment = { sql: `${col} NOT IN (${placeholders})`, params: vals };
+      break;
     }
     case "between": {
-      // value is "HH:MM-HH:MM" or "start-end"
-      // indexOf("-", 3) skips the colon in HH:MM so we don't split on it
       const str = String(node.value);
       const dashIdx = str.indexOf("-", 3);
       if (dashIdx === -1) throw new Error(`Invalid between value: "${str}"`);
       const start = str.slice(0, dashIdx);
       const end   = str.slice(dashIdx + 1);
-      return { sql: `${col} BETWEEN $${idx} AND $${idx + 1}`, params: [start, end] };
+      fragment = { sql: `${col} BETWEEN $${idx} AND $${idx + 1}`, params: [start, end] };
+      break;
     }
     default:
-      // regex and any non-SQL operators should never reach here — isSqlCapable() routes them to residuals
       throw new Error(`Operator "${node.operator}" is not SQL-translatable`);
   }
+
+  logAbac("SQL_CONDITION_RESULT", "Condition SQL translation completed", { operator: node.operator, fragment });
+  return fragment;
 }
 
 function groupToSql(group: FilterGroup, offset: number): SqlFragment {
-  if (group.conditions.length === 0) return { sql: "1=1", params: [] };
-  if (group.conditions.length === 1) return toSql(group.conditions[0]!, offset);
+  logAbac("SQL_GROUP_START", "Translating filter group to SQL", { group, offset });
+  if (group.conditions.length === 0) {
+    const fragment = { sql: "1=1", params: [] };
+    logAbac("SQL_GROUP_RESULT", "Empty filter group translated to TRUE", { fragment });
+    return fragment;
+  }
+  if (group.conditions.length === 1) {
+    const fragment = toSql(group.conditions[0]!, offset);
+    logAbac("SQL_GROUP_RESULT", "Single-child filter group delegated to child", { fragment });
+    return fragment;
+  }
 
   const parts: string[] = [];
   const allParams: unknown[] = [];
 
   for (const child of group.conditions) {
     const fragment = toSql(child, offset + allParams.length);
-    // wrap child in parens if it's a group with a different logic operator
     const needsParens = child.type === "group";
     parts.push(needsParens ? `(${fragment.sql})` : fragment.sql);
     allParams.push(...fragment.params);
   }
 
   const joinWord = group.logic === "OR" ? " OR " : " AND ";
-  return { sql: parts.join(joinWord), params: allParams };
+  const fragment = { sql: parts.join(joinWord), params: allParams };
+  logAbac("SQL_GROUP_RESULT", "Filter group SQL translation completed", { groupLogic: group.logic, fragment });
+  return fragment;
 }

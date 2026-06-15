@@ -69,6 +69,7 @@ export const DEFAULT_RESOURCES: ResourceConfig[] = [
 
 export const DEFAULT_RESOURCE_ATTRIBUTES: AttributeDefinition[] = [
   { key: "tenantId",    label: "Resource Tenant ID", valueType: "string",  description: "The tenant this resource belongs to" },
+  { key: "deviceId",    label: "Device ID",           valueType: "string",  description: "Device UUID — devices only" },
   { key: "ownerId",     label: "Owner ID",            valueType: "string",  description: "The user who owns this resource" },
   { key: "status",      label: "Status",              valueType: "string",  description: "Current state of the resource", options: ["ONLINE", "OFFLINE", "INACTIVE", "AVAILABLE", "IN_USE", "MAINTENANCE", "RETIRED", "DAMAGED", "LOST", "INPROGRESS", "ACKNOWLEDGED", "REJECTED", "PENDING"] },
   { key: "severity",    label: "Alert Severity",      valueType: "string",  description: "Severity level — alerts only", options: ["INFO", "WARNING", "CRITICAL"] },
