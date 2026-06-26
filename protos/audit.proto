@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package audit;
+
+service AuditService {
+  rpc StreamLogs(stream AuditEntry) returns (StreamResponse);
+}
+
+message AuditEntry {
+  string event_id = 1;
+  string timestamp = 2;
+
+  string service = 3;
+  string environment = 4;
+
+  string request_id = 5;
+  string trace_id = 6;
+
+  string user_id = 7;
+  string tenant_id = 8;
+
+  string action = 9;
+  string event_type = 10;
+
+  string resource = 11;
+  string resource_id = 12;
+  string resource_path = 13;
+
+  string method = 14;
+  int32 status_code = 15;
+  string outcome = 16;
+
+  string ip_address = 17;
+  string user_agent = 18;
+
+  int64 latency_ms = 19;
+
+  string metadata_json = 20;
+}
+
+message StreamResponse {
+  bool success = 1;
+  uint32 accepted_count = 2;
+  string error_message = 3;
+}
