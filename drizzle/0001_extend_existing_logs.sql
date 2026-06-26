@@ -1,0 +1,33 @@
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS event_id TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS timestamp TIMESTAMPTZ;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS service TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS environment TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS request_id TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS trace_id TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS event_type TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS resource TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS resource_id TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS resource_path TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS method TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS status_code INT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS outcome TEXT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS latency_ms BIGINT;
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS metadata JSONB;
+
+UPDATE logs SET timestamp = created_at WHERE timestamp IS NULL;
+UPDATE logs SET resource_path = path WHERE resource_path IS NULL;
+UPDATE logs SET metadata = data WHERE metadata IS NULL;
+UPDATE logs SET service = 'auth-api' WHERE service IS NULL;
+UPDATE logs SET environment = 'legacy' WHERE environment IS NULL;
+UPDATE logs SET outcome = 'SUCCESS' WHERE outcome IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp);
+CREATE INDEX IF NOT EXISTS idx_logs_service ON logs(service);
+CREATE INDEX IF NOT EXISTS idx_logs_request_id ON logs(request_id);
+CREATE INDEX IF NOT EXISTS idx_logs_trace_id ON logs(trace_id);
+CREATE INDEX IF NOT EXISTS idx_logs_event_type ON logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_logs_resource ON logs(resource);
+CREATE INDEX IF NOT EXISTS idx_logs_resource_id ON logs(resource_id);
+CREATE INDEX IF NOT EXISTS idx_logs_outcome ON logs(outcome);
+CREATE INDEX IF NOT EXISTS idx_logs_status_code ON logs(status_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_logs_event_id_unique ON logs(event_id) WHERE event_id IS NOT NULL;
