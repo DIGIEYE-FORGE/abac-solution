@@ -1,0 +1,35 @@
+{
+  "name": "@digieye/abac",
+  "version": "1.0.0",
+  "description": "Platform-agnostic ABAC (Attribute-Based Access Control) engine",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsx --watch src/index.ts",
+    "build": "tsc",
+    "test": "node --test \"src/__tests__/**/*.test.ts\"",
+    "test:breakpoint": "tsx examples/breakpoint-test.ts",
+    "prepublishOnly": "pnpm build",
+    "prepare": "pnpm build"
+  },
+  "keywords": [
+    "abac",
+    "access-control",
+    "authorization"
+  ],
+  "author": "DigiEye",
+  "license": "ISC",
+  "dependencies": {
+    "winston": "^3.17.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.7.2"
+  }
+}
