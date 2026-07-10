@@ -11,24 +11,25 @@
   "scripts": {
     "dev": "tsx --watch src/index.ts",
     "build": "tsc",
-    "test": "tsx --test src/__tests__/abac.test.ts",
+    "test": "node --test \"src/__tests__/**/*.test.ts\"",
+    "test:breakpoint": "tsx examples/breakpoint-test.ts",
     "prepublishOnly": "pnpm build",
     "prepare": "pnpm build"
   },
   "keywords": [
     "abac",
     "access-control",
-    "authorization",
-    "policy"
+    "authorization"
   ],
   "author": "DigiEye",
   "license": "ISC",
+  "dependencies": {
+    "winston": "^3.17.0",
+    "zod": "^4.3.6"
+  },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "tsx": "^4.20.3",
     "typescript": "^5.7.2"
-  },
-  "dependencies": {
-    "zod": "^4.3.6"
   }
 }

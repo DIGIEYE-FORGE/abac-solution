@@ -19,6 +19,7 @@ export const OPERATORS_BY_TYPE: Record<AttributeValueType, AttributeOperator[]> 
     "equals", "not_equals",
     "greater_than", "less_than",
     "greater_than_or_equal", "less_than_or_equal",
+    "between",
   ],
   array: ["in", "not_in", "contains", "not_contains"],
   string: [

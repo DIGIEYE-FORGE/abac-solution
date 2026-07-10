@@ -2,7 +2,7 @@
 
 Platform-agnostic **Attribute-Based Access Control** (ABAC) engine for TypeScript/JavaScript.
 
-Define policies with fine-grained conditions on **who** (subject), **what** (resource), **how** (action), and **when** (environment) -- then evaluate access decisions at runtime.
+`@digieye/abac` compiles policies into V3 execution plans, produces SQL filter ASTs for list/create paths, and performs batch row-level verification. The runtime rollout uses `PlanABAC` + `BatchEvaluateABAC` instead of the removed legacy point-in-time APIs.
 
 ## Installation
 
@@ -13,20 +13,25 @@ pnpm add @digieye/abac
 ## Quick Start
 
 ```typescript
-import { ABAC, type Policy } from "@digieye/abac";
+import { ABAC, type Policy, toSql } from "@digieye/abac";
 
 const abac = new ABAC();
 
 const policies: Policy[] = [
   {
     id: "allow-read-devices",
-    name: "Allow engineers to read devices",
+    name: "Allow engineers to read tenant devices",
     resources: ["devices"],
     actions: ["read"],
     effect: "allow",
     conditions: [
       {
-        id: "c1",
+        id: "tenant-match",
+        category: "subject",
+        attribute: { key: "tenantId", value: "{resource.tenantId}", operator: "equals" },
+      },
+      {
+        id: "role-engineer",
         category: "subject",
         attribute: { key: "role", value: "engineer", operator: "equals" },
       },
@@ -37,36 +42,256 @@ const policies: Policy[] = [
   },
 ];
 
-const decision = abac.can({
+const compiled = abac.compilePolicies({
   policies,
-  action: "read",
+  tenantId: "tenant-1",
   resource: "devices",
-  subject: { role: "engineer", tenantId: "t1" },
+  action: "read",
+  knownResourceFields: new Set(["tenantId", "status", "ownerId"]),
 });
 
-console.log(decision);
-// { allowed: true, reason: "Allowed by policy: Allow engineers to read devices", matchedPolicy: ... }
+const plan = abac.planCompiledAccess({
+  compiledPolicySet: compiled,
+  requestId: "req-1",
+  tenantId: "tenant-1",
+  userId: "user-1",
+  resource: "devices",
+  action: "read",
+  mode: "list",
+  subject: { userId: "user-1", role: "engineer", tenantId: "tenant-1" },
+  environment: { ipAddress: "10.0.0.1" },
+});
+
+console.log(plan.decision);
+// "filter_required" when SQL filters and residual verification are required
+
+if (plan.includeFilter) {
+  const sql = toSql(plan.includeFilter);
+  console.log(sql.sql, sql.params);
+}
 ```
 
-### Policy
+## V3 Runtime Flow
 
-A policy is the central unit. It defines:
+1. Load or fetch policies for the tenant/resource/action.
+2. Validate policy objects with `validatePolicy()`.
+3. Compile policies with `compilePolicies()`.
+4. Build a V3 authorization plan with `planCompiledAccess()`.
+5. Apply `includeFilter` and `excludeFilter` to SQL/list queries.
+6. Verify residual conditions in application code when `requiresVerification` is `true`.
+7. Use `batchEvaluate()` for row-level verification after candidate rows are selected.
+
+The V3 plan shape is:
+
+```typescript
+{
+  schemaVersion: 3,
+  requestId: string,
+  tenantId: string,
+  userId: string,
+  resource: string,
+  action: string,
+  mode: "single" | "list" | "create" | "bulk",
+  decision: "allow" | "deny" | "filter_required",
+  reason: string,
+  includeFilter: FilterNode | FilterGroup | null,
+  excludeFilter: FilterNode | FilterGroup | null,
+  residualFields: string[],
+  requiresVerification: boolean,
+  residualConditions: ResidualCondition[],
+  hasUnconditionalAllow: boolean,
+  defaultEffect: "allow" | "deny",
+  policyIds: string[],
+  warnings: string[],
+  authDbMetrics: string,
+  planLatencyMs: number,
+}
+```
+
+## API Reference
+
+### Constructor
+
+```typescript
+const abac = new ABAC(config?: ABACConfig);
+```
+
+All config fields are optional. Defaults are provided for subject/environment/resource attributes, operators, resources, actions, and environment resolvers.
+
+```typescript
+interface ABACConfig {
+  attributes?: {
+    subject?: AttributeDefinition[];
+    environment?: AttributeDefinition[];
+    resource?: AttributeDefinition[];
+  };
+  operators?: OperatorConfig[];
+  environmentResolvers?: EnvironmentResolver[];
+  resources?: ResourceConfig[];
+  actions?: ActionConfig[];
+  defaultEffect?: "allow" | "deny"; // default: "deny"
+}
+```
+
+### `validatePolicy(policy)`
+
+Validates a policy object before storing or compiling it.
+
+```typescript
+const result = abac.validatePolicy(unknownObject);
+// { valid: boolean, errors: string[] }
+```
+
+### `compilePolicies(params)`
+
+Compiles active policies for a tenant/resource/action into a V3 policy set.
+
+```typescript
+const compiled = abac.compilePolicies({
+  policies,
+  tenantId: "tenant-1",
+  resource: "devices",
+  action: "read",
+  knownResourceFields: new Set(["tenantId", "ownerId", "status"]),
+});
+```
+
+The compiled set separates allow and deny policies, records SQL capability, and keeps residual conditions that cannot be pushed to SQL.
+
+### `planCompiledAccess(params)`
+
+Creates a V3 authorization plan from a compiled policy set.
+
+```typescript
+const plan = abac.planCompiledAccess({
+  compiledPolicySet: compiled,
+  requestId: "req-1",
+  tenantId: "tenant-1",
+  userId: "user-1",
+  resource: "devices",
+  action: "read",
+  mode: "list",
+  subject: { userId: "user-1", role: "engineer", tenantId: "tenant-1" },
+  environment: { ipAddress: "10.0.0.1" },
+});
+```
+
+Decision behavior:
+
+- `allow`: access is allowed without row filters.
+- `deny`: access is denied.
+- `filter_required`: apply generated filters and perform residual verification before returning or mutating rows.
+
+Create-mode decisions prioritize deny matches, then residual verification, then include-filter verification against the candidate resource context.
+
+### `batchEvaluate(params)`
+
+Evaluates candidate rows after list filtering.
+
+```typescript
+const response = abac.batchEvaluate({
+  requestId: "req-1",
+  tenantId: "tenant-1",
+  userId: "user-1",
+  resource: "devices",
+  action: "read",
+  mode: "list",
+  subject: { userId: "user-1", role: "engineer", tenantId: "tenant-1" },
+  environment: { ipAddress: "10.0.0.1" },
+  rows: [
+    {
+      resourceId: "device-1",
+      resourceContext: { tenantId: "tenant-1", ownerId: "user-1", status: "active" },
+    },
+  ],
+  policies,
+});
+```
+
+Response:
+
+```typescript
+{
+  requestId: string,
+  decisions: [
+    {
+      resourceId: string,
+      allowed: boolean,
+      reason: string,
+      matchedPolicyId?: string,
+      matchedPolicyName?: string,
+      matchedPolicyEffect?: "allow" | "deny",
+    },
+  ],
+  requiresFurtherVerification: boolean,
+  warnings: string[],
+  authDbMetrics: string,
+  verificationLatencyMs: number,
+}
+```
+
+### `buildFilterResult(params)`
+
+Builds include/exclude filter ASTs from raw policies.
+
+```typescript
+import { buildFilterResult } from "@digieye/abac";
+
+const result = buildFilterResult({
+  policies,
+  context: {
+    subject: { userId: "user-1", role: "engineer", tenantId: "tenant-1" },
+    action: "read",
+    environment: { ipAddress: "10.0.0.1" },
+    resource: { tenantId: "tenant-1" },
+  },
+  targetResource: "devices",
+  knownResourceFields: new Set(["tenantId", "ownerId", "status"]),
+  defaultEffect: "deny",
+});
+```
+
+The result contains:
+
+- `includeFilter`: SQL-capable allow filters.
+- `excludeFilter`: SQL-capable deny filters.
+- `requiresVerification`: whether residual conditions remain.
+- `residualConditions`: conditions that must be checked outside SQL.
+- `policyIds`, `warnings`, and `defaultEffect`.
+
+### `toSql(filter)`
+
+Translates a `FilterNode` or `FilterGroup` into a parameterized SQL fragment.
+
+```typescript
+import { toSql } from "@digieye/abac";
+
+const fragment = toSql(plan.includeFilter);
+console.log(fragment.sql); // "tenantId" = $1
+console.log(fragment.params); // ["tenant-1"]
+```
+
+For deny filters, use `excludeToSqlParts(excludeFilter)` and apply each returned fragment as an independent `NOT(...)` veto. Do not wrap the whole exclude filter in one `NOT(...)`.
+
+## Policy
+
+A policy is the central unit. It defines who, what, how, and when.
 
 | Field            | Type               | Description                                      |
 | ---------------- | ------------------ | ------------------------------------------------ |
 | `id`             | `string`           | Unique identifier                                |
 | `name`           | `string`           | Human-readable name                              |
-| `resources`      | `string[]`         | Target resources (e.g. `["devices", "assets"]`)  |
-| `actions`        | `string[]`         | Allowed actions (e.g. `["read", "update"]`)      |
+| `resources`      | `string[]`         | Target resources, e.g. `["devices"]`             |
+| `actions`        | `string[]`         | Target actions, e.g. `["read", "update"]`        |
 | `effect`         | `"allow" \| "deny"` | Whether this policy allows or denies             |
 | `conditions`     | `PolicyCondition[]` | Attribute conditions that must be met            |
 | `conditionLogic` | `"AND" \| "OR"`    | How conditions combine                           |
-| `priority`       | `number`           | Higher = stronger (evaluated first)              |
+| `priority`       | `number`           | Higher = stronger                                |
 | `isActive`       | `boolean`          | Inactive policies are skipped                    |
 
 Use `resources: ["*"]` and `actions: ["*"]` for wildcard matching.
 
-### Condition Categories
+## Condition Categories
 
 Each condition targets one of three attribute categories:
 
@@ -74,13 +299,13 @@ Each condition targets one of three attribute categories:
 | --------------- | ----------------------------- | --------------------------------------------- |
 | **subject**     | The authenticated user        | `role equals "admin"`                         |
 | **resource**    | The target resource           | `tags contains "critical"`                    |
-| **environment** | Request context (time, IP...) | `dayOfWeek in ["Monday", "Friday"]`           |
+| **environment** | Request context               | `ipAddress in ["10.0.0.0/8"]`                 |
 
-### Operators
+## Operators
 
 | Operator                 | Types              | Description                      |
 | ------------------------ | ------------------ | -------------------------------- |
-| `equals`                 | all                | Loose equality (type-coercing)   |
+| `equals`                 | all                | Loose equality                   |
 | `not_equals`             | all                | Negation of equals               |
 | `contains`               | string, array      | Substring or array member check  |
 | `not_contains`           | string, array      | Negation of contains             |
@@ -94,102 +319,7 @@ Each condition targets one of three attribute categories:
 | `ends_with`              | string             | Suffix match                     |
 | `regex`                  | string             | Regular expression test          |
 
-### Deny-Overrides Algorithm
-
-When `evaluateAccess` is called:
-
-1. Policies are sorted by `priority` descending (highest first).
-2. Each policy is evaluated **once** in a single pass.
-3. If **any** matching deny is found, access is **denied** immediately.
-4. If no deny is found but an allow matched, access is **allowed**.
-5. If nothing matched, the `defaultEffect` applies (default: `"deny"`).
-
-This means deny always wins over allow, regardless of priority.
-
-## API Reference
-
-### Constructor
-
-```typescript
-const abac = new ABAC(config?: ABACConfig);
-```
-
-All config fields are optional. Defaults are provided for everything.
-
-```typescript
-interface ABACConfig {
-  attributes?: {
-    subject?: AttributeDefinition[];
-    environment?: AttributeDefinition[];
-  };
-  operators?: OperatorConfig[];
-  environmentResolvers?: EnvironmentResolver[];
-  resources?: ResourceConfig[];
-  actions?: ActionConfig[];
-  defaultEffect?: "allow" | "deny"; // default: "deny"
-}
-```
-
-### Evaluation Methods
-
-#### `can(params)` -- Quick access check
-
-```typescript
-const decision = abac.can({
-  policies,
-  action: "update",
-  resource: "devices",
-  subject: { userId: "u1", role: "admin", tenantId: "t1" },
-  environment: { ipAddress: "10.0.0.1" },                 // optional, auto-built if omitted
-});
-// Returns: { allowed: boolean, reason: string, matchedPolicy?: Policy }
-```
-
-#### `evaluateAccess(policies, context, targetResource)` -- Full control
-
-```typescript
-const context: EvaluationContext = {
-  subject: { userId: "u1", role: "viewer" },
-  resource: { type: "dashboards", ownerId: "u1" },
-  action: "read",
-  environment: abac.buildEnvironmentContext({ ipAddress: req.ip }),
-};
-
-const decision = abac.evaluateAccess(policies, context, "dashboards");
-```
-
-#### `explainAccess(policies, context, targetResource)` -- Debugging
-
-Returns the full breakdown of which policies matched (deny/allow) and which were skipped.
-
-```typescript
-const explanation = abac.explainAccess(policies, context, "devices");
-// {
-//   decision: { allowed: false, reason: "Denied by policy: ...", matchedPolicy: ... },
-//   matchedDenies: [Policy, ...],
-//   matchedAllows: [Policy, ...],
-//   skipped: [Policy, ...],
-// }
-```
-
-#### `evaluatePolicy(policy, context, targetResource)` -- Single policy
-
-Returns `true` if the policy matches the context (resource + action + conditions).
-
-#### `evaluateCondition(condition, context)` -- Single condition
-
-Returns `true` if one condition is satisfied.
-
-### Validation
-
-```typescript
-const result = abac.validatePolicy(unknownObject);
-// { valid: boolean, errors: string[] }
-```
-
-Uses Zod schemas internally. Validates structure, types, required fields, and operator values.
-
-### Context Variables
+## Context Variables
 
 Condition values can reference runtime data using `{prefix.key}` syntax:
 
@@ -199,92 +329,59 @@ Condition values can reference runtime data using `{prefix.key}` syntax:
 | `{subject.userId}`    | `context.subject.userId`              |
 | `{resource.ownerId}`  | `context.resource.ownerId`            |
 | `{env.now}`           | Current ISO date-time                 |
-| `{env.dayOfWeek}`     | Current day name (e.g. "Monday")      |
-| `{env.hour}`          | Current hour (0-23)                   |
-| `{env.date}`          | Today in YYYY-MM-DD                   |
-| `{env.ipAddress}`     | Client IP (platform-injected)         |
-
-Context variables for `subject` and `resource` are **auto-generated** from attribute definitions. Environment variables come from resolvers.
+| `{env.dayOfWeek}`     | Current day name                      |
+| `{env.hour}`          | Current hour, 0-23                    |
+| `{env.date}`          | Today in `YYYY-MM-DD`                 |
+| `{env.ipAddress}`     | Client IP                             |
 
 ```typescript
-// Example: condition that checks tenant isolation
 {
-  id: "c1",
+  id: "tenant-isolation",
   category: "subject",
   attribute: {
     key: "tenantId",
-    value: "{resource.tenantId}",  // resolves at runtime
+    value: "{resource.tenantId}",
     operator: "equals",
   },
 }
 ```
 
-### Environment Resolvers
+## Environment Resolvers
 
-Built-in resolvers auto-compute values like `env.now`, `env.dayOfWeek`, `env.hour`. Platform-specific values (IP, user agent, etc.) must be injected:
+Built-in resolvers compute values like `env.now`, `env.dayOfWeek`, and `env.hour`. Platform-specific values must be injected into `environment`.
 
 ```typescript
-// Backend (Express)
-const env = abac.buildEnvironmentContext({
-  ipAddress: req.ip,
-  requestMethod: req.method,
-  requestPath: req.path,
-  userAgent: req.headers["user-agent"],
-  deviceType: "api",
-});
-
-const context: EvaluationContext = {
-  subject: { ...user },
-  resource: { type: "devices" },
+const context = {
+  subject: { userId: "user-1", role: "admin", tenantId: "tenant-1" },
   action: "read",
-  environment: env,
+  environment: {
+    ipAddress: req.ip,
+    requestMethod: req.method,
+    requestPath: req.path,
+    userAgent: req.headers["user-agent"],
+  },
+  resource: { tenantId: "tenant-1" },
 };
 ```
 
-You can override any resolver by passing `environmentResolvers` in the config:
+## Attribute and Operator Helpers
+
+The ABAC instance also exposes UI/config helpers:
 
 ```typescript
-const abac = new ABAC({
-
-  environmentResolvers: [
-    {
-      key: "env.ipAddress",
-      label: "Client IP",
-      forAttributeKeys: ["ipAddress"],
-      resolve: () => getClientIp(), // your custom logic
-    },
-
-  ],
-});
-```
-
-### Attribute & Operator Helpers (for UI)
-
-```typescript
-// Get all subject attributes
 abac.getAttributes("subject");
-
-// Get one attribute definition
 abac.getAttribute("environment", "dayOfWeek");
-
-// Get operators filtered by value type
-abac.getOperatorsFor("array");          // in, not_in, contains, not_contains
-abac.getOperatorsFor("boolean");        // equals, not_equals
-abac.getOperatorsFor("string");         // equals, not_equals, contains, starts_with, ...
-abac.getOperatorsFor("string", "workHoursRange"); // equals, not_equals only
-
-// Get context variables for a condition input
+abac.getOperatorsFor("array");
+abac.getOperatorsFor("string", "workHoursRange");
 abac.getContextVariablesFor("subject", "tenantId");
-
-// Resources and actions
-abac.getResources("core");             // devices, assets, groups, ...
-abac.getResourceCategories();           // ["core", "monitoring", "administration", ...]
-abac.getActions();                      // create, read, update, delete, execute, manage
+abac.getResources("core");
+abac.getResourceCategories();
+abac.getActions();
 ```
 
-### Default Resources
+## Default Resources
 
-The package ships with resources mapped to common backend models, grouped by category:
+The package ships with common backend resources grouped by category:
 
 | Category         | Resources                                                              |
 | ---------------- | ---------------------------------------------------------------------- |
@@ -298,7 +395,7 @@ The package ships with resources mapped to common backend models, grouped by cat
 
 Override with `new ABAC({ resources: [...] })`.
 
-### Default Actions
+## Default Actions
 
 `create`, `read`, `update`, `delete`, `execute`, `manage`
 
@@ -328,29 +425,7 @@ const tenantPolicy: Policy = {
 };
 ```
 
-### Time-Based Access
-
-```typescript
-const workHoursOnly: Policy = {
-  id: "work-hours",
-  name: "Block access outside work hours",
-  resources: ["*"],
-  actions: ["*"],
-  effect: "deny",
-  conditions: [
-    {
-      id: "c1",
-      category: "environment",
-      attribute: { key: "workHoursRange", value: "08:00-18:00", operator: "not_equals" },
-    },
-  ],
-  conditionLogic: "AND",
-  priority: 500,
-  isActive: true,
-};
-```
-
-### Role + Resource Condition (AND)
+### Role + Resource Condition
 
 ```typescript
 const policy: Policy = {
@@ -361,12 +436,12 @@ const policy: Policy = {
   effect: "allow",
   conditions: [
     {
-      id: "c1",
+      id: "role",
       category: "subject",
       attribute: { key: "role", value: "engineer", operator: "equals" },
     },
     {
-      id: "c2",
+      id: "critical",
       category: "resource",
       attribute: { key: "tags", value: "critical", operator: "contains" },
     },
@@ -377,58 +452,52 @@ const policy: Policy = {
 };
 ```
 
-### IP Whitelist (OR logic)
+### Deny Filter
 
 ```typescript
-const ipPolicy: Policy = {
-  id: "ip-whitelist",
-  name: "Allow from office or VPN",
-  resources: ["*"],
-  actions: ["*"],
-  effect: "allow",
+const denyPolicy: Policy = {
+  id: "deny-inactive-devices",
+  name: "Deny inactive devices",
+  resources: ["devices"],
+  actions: ["read"],
+  effect: "deny",
   conditions: [
     {
-      id: "c1",
-      category: "environment",
-      attribute: { key: "ipAddress", value: ["10.0.0.0/8"], operator: "in" },
-    },
-    {
-      id: "c2",
-      category: "environment",
-      attribute: { key: "networkType", value: "vpn", operator: "equals" },
+      id: "inactive",
+      category: "resource",
+      attribute: { key: "status", value: "inactive", operator: "equals" },
     },
   ],
-  conditionLogic: "OR",
-  priority: 200,
+  conditionLogic: "AND",
+  priority: 500,
   isActive: true,
 };
 ```
 
 ## Performance
 
-The engine is optimized for fast evaluation:
+The engine is optimized for V3 planning and SQL pushdown:
 
-- **O(1) attribute lookups** via pre-built Maps (per category)
-- **O(1) environment resolver lookups** via Map instead of linear scan
-- **Cached operator filters** -- `getOperatorsFor` results are memoized
-- **Cached regex patterns** -- compiled `RegExp` objects are reused (capped at 100)
-- **Short-circuit evaluation** -- AND stops at first `false`, OR stops at first `true`
-- **Single-pass policy evaluation** -- `evaluateAccess` iterates policies once (not twice)
-- **Lazy context variables** -- computed once on first access, then cached
+- Active policies are filtered by tenant/resource/action before planning.
+- SQL-capable allow and deny conditions are compiled into filter ASTs.
+- Deny filters are represented as independent veto fragments.
+- Residual conditions are returned explicitly for runtime verification.
+- Context variable resolution is reused through environment resolvers.
+- Regex patterns are compiled and cached.
 
 ## Building
 
 ```bash
-pnpm build    # outputs to dist/
+pnpm build
 ```
 
 ## Testing
 
 ```bash
-npx tsx examples/test.ts
+pnpm test
 ```
 
-The test file contains 63 tests covering all operators, condition logic, context variables, deny-overrides, wildcards, validation, work hours, and edge cases.
+The test suite covers operators, condition logic, context variables, deny filters, wildcards, validation, V3 planning, batch evaluation, and SQL translation.
 
 ## License
 
