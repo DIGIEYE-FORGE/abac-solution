@@ -190,4 +190,3 @@ export function compare(
   logAbac("OPERATOR_COMPARE_RESULT", "ABAC operator comparison completed", { left, right, operator, result });
   return result;
 }
-

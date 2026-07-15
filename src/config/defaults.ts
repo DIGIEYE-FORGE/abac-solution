@@ -177,4 +177,3 @@ export const DEFAULT_ENVIRONMENT_RESOLVERS: EnvironmentResolver[] = [
     forAttributeKeys: ["userAgent"],
   },
 ];
-

@@ -386,4 +386,3 @@ export function buildFilterResult(
     policyIds,
   };
 }
-

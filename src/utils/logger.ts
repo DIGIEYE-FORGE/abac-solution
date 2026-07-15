@@ -64,5 +64,3 @@ export const abacLogger = winston.createLogger({
 export function logAbac(stage: string, message: string, meta: Record<string, unknown> = {}): void {
   abacLogger.info(message, { stage, ...meta });
 }
-
-

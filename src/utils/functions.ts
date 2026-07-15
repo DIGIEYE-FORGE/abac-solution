@@ -32,4 +32,3 @@ export function parseTimeToMinutes(time: string): number | null {
 export function timeToMinutes(time: string): number {
   return parseTimeToMinutes(time) ?? 0;
 }
-

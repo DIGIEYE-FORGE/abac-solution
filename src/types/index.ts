@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-export type AttributeCategory = "subject" | "environment";
-=======
 export type AttributeCategory = "subject" | "environment" | "resource";
->>>>>>> Abac-V4
 
 export type AttributeOperator =
   | "equals" | "not_equals"
@@ -11,11 +7,7 @@ export type AttributeOperator =
   | "greater_than" | "less_than"
   | "greater_than_or_equal" | "less_than_or_equal"
   | "starts_with" | "ends_with"
-<<<<<<< HEAD
-  | "regex";
-=======
   | "regex" | "between";
->>>>>>> Abac-V4
 
 export type AttributeValueType = "string" | "number" | "boolean" | "date" | "array" | "time";
 
@@ -66,28 +58,19 @@ export interface ActionConfig {
   value: string;
   label: string;
   description?: string;
-<<<<<<< HEAD
-=======
   httpMethods?: string[];
->>>>>>> Abac-V4
 }
 
 export interface PolicyCondition {
   id: string;
   category: AttributeCategory;
-<<<<<<< HEAD
-=======
   logic?: ConditionLogic;
->>>>>>> Abac-V4
   attribute: {
     key: string;
     value: ConditionValue;
     operator: AttributeOperator;
   };
-<<<<<<< HEAD
-=======
   external?: boolean;
->>>>>>> Abac-V4
 }
 
 export interface Policy {
@@ -107,10 +90,7 @@ export interface EvaluationContext {
   subject: Record<string, unknown>;
   action: string;
   environment: Record<string, unknown>;
-<<<<<<< HEAD
-=======
   resource?: Record<string, unknown>;
->>>>>>> Abac-V4
 }
 
 export interface AccessDecision {
@@ -119,13 +99,6 @@ export interface AccessDecision {
   matchedPolicy?: Policy;
 }
 
-<<<<<<< HEAD
-export interface AccessExplanation {
-  decision: AccessDecision;
-  matchedDenies: Policy[];
-  matchedAllows: Policy[];
-  skipped: Policy[];
-=======
 
 export type AuthorizationMode = "single" | "list" | "create" | "bulk";
 
@@ -168,7 +141,6 @@ export interface CompiledPolicySet {
   updatedAt: string;
   allowPolicies: CompiledPolicy[];
   denyPolicies: CompiledPolicy[];
->>>>>>> Abac-V4
 }
 
 export interface PolicyValidationResult {
@@ -176,8 +148,6 @@ export interface PolicyValidationResult {
   errors: string[];
 }
 
-<<<<<<< HEAD
-=======
 export interface FilterNode {
   type: "condition";
   field: string;
@@ -200,15 +170,11 @@ export interface FilterResult {
   policyIds: string[];
 }
 
->>>>>>> Abac-V4
 export interface ABACConfig {
   attributes?: {
     subject?: AttributeDefinition[];
     environment?: AttributeDefinition[];
-<<<<<<< HEAD
-=======
     resource?: AttributeDefinition[];
->>>>>>> Abac-V4
   };
   operators?: OperatorConfig[];
   environmentResolvers?: EnvironmentResolver[];

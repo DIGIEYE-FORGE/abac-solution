@@ -81,4 +81,3 @@ export const filterResultSchema = z.object({
   defaultEffect: policyEffectSchema,
   policyIds: z.array(z.string()),
 });
-
