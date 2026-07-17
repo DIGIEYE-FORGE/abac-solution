@@ -247,7 +247,6 @@ export function compilePolicies(params: {
   const active = selectActivePolicies(params.policies, params.resource, params.action);
 
   return {
-    schemaVersion: 4,
     tenantId: params.tenantId,
     resource: params.resource,
     action: params.action,
@@ -354,7 +353,6 @@ export function buildFilterResult(
   // An unconditional deny is terminal because deny policies override all allows.
   if (denyAll) {
     return {
-      schemaVersion: 4,
       includeFilter: null,
       excludeFilter: null,
       decision: "deny",
@@ -369,7 +367,6 @@ export function buildFilterResult(
   // An unconditional allow still keeps excludeFilter so deny-by-resource policies can remove rows.
   if (allowAll) {
     return {
-      schemaVersion: 4,
       includeFilter: null,
       excludeFilter,
       decision: "allow",
@@ -379,7 +376,6 @@ export function buildFilterResult(
   }
 
   return {
-    schemaVersion: 4,
     includeFilter,
     excludeFilter,
     defaultEffect,

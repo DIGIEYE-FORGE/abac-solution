@@ -1,16 +1,7 @@
 import type { ConditionValue, EvaluationContext, EnvironmentResolver } from "../types";
-import { CONTEXT_VAR_RE } from "../config/constants";
 import { logAbac } from "./logger";
 
-/**
- * Detects policy placeholders such as {subject.userId} or {env.currentHHMM}.
- * The UI and evaluator both need this to distinguish literal strings from dynamic context references.
- */
-export function isContextVariable(value: unknown): boolean {
-  const result = typeof value === "string" && CONTEXT_VAR_RE.test(value.trim());
-  logAbac("RESOLVER_IS_CONTEXT_VARIABLE", "Checked context variable pattern", { value, result });
-  return result;
-}
+const CONTEXT_VARIABLE_PATTERN = /^\{[\w.]+\}$/;
 
 /**
  * Resolves one string policy value against the current evaluation context.
@@ -24,7 +15,7 @@ function resolveSingle(
   const trimmed = raw.trim();
   logAbac("RESOLVER_SINGLE_START", "Resolving single condition value", { raw, trimmed });
   // Plain strings are valid policy values and should not be treated as missing context.
-  if (!CONTEXT_VAR_RE.test(trimmed)) {
+  if (!CONTEXT_VARIABLE_PATTERN.test(trimmed)) {
     logAbac("RESOLVER_SINGLE_LITERAL", "Condition value is not a context variable", { raw });
     return raw;
   }
