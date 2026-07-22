@@ -277,7 +277,6 @@ src/
   abac.ts                 Public compiled-policy engine and decision planner
   index.ts                Public package exports
   types/index.ts          Shared policy, compiled-set, filter, and plan contracts
-  config/constants.ts     Context-variable syntax
   config/defaults.ts      Built-in environment resolvers
   utils/ast-builder.ts    Policy selection and filter AST construction
   utils/operators.ts      Condition comparison semantics
