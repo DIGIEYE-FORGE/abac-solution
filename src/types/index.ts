@@ -9,35 +9,9 @@ export type AttributeOperator =
   | "starts_with" | "ends_with"
   | "regex" | "between";
 
-export type AttributeValueType = "string" | "number" | "boolean" | "date" | "array" | "time";
-
 export type ConditionValue = string | number | boolean | string[];
-
 export type PolicyEffect = "allow" | "deny";
-
 export type ConditionLogic = "AND" | "OR";
-
-export interface AttributeDefinition {
-  key: string;
-  label: string;
-  valueType: AttributeValueType;
-  description?: string;
-  options?: string[];
-}
-
-export interface OperatorConfig {
-  value: AttributeOperator;
-  label: string;
-  description?: string;
-}
-
-export interface ContextVariable {
-  value: string;
-  label: string;
-  description?: string;
-  forAttributeKeys?: string[];
-  forCategories?: AttributeCategory[];
-}
 
 export interface EnvironmentResolver {
   key: string;
@@ -45,20 +19,6 @@ export interface EnvironmentResolver {
   description?: string;
   forAttributeKeys?: string[];
   resolve?: () => ConditionValue;
-}
-
-export interface ResourceConfig {
-  value: string;
-  label: string;
-  description?: string;
-  category?: string;
-}
-
-export interface ActionConfig {
-  value: string;
-  label: string;
-  description?: string;
-  httpMethods?: string[];
 }
 
 export interface PolicyCondition {
@@ -70,7 +30,6 @@ export interface PolicyCondition {
     value: ConditionValue;
     operator: AttributeOperator;
   };
-  external?: boolean;
 }
 
 export interface Policy {
@@ -93,19 +52,10 @@ export interface EvaluationContext {
   resource?: Record<string, unknown>;
 }
 
-export interface AccessDecision {
-  allowed: boolean;
-  reason: string;
-  matchedPolicy?: Policy;
-}
-
-
 export type AuthorizationMode = "single" | "list" | "create" | "bulk";
-
 export type AccessDecisionResult = "allow" | "deny" | "filter_required";
 
 export interface AuthorizationPlan {
-  schemaVersion: 4;
   requestId: string;
   tenantId: string;
   userId: string;
@@ -120,7 +70,6 @@ export interface AuthorizationPlan {
   policyIds: string[];
 }
 
-
 export interface CompiledPolicy {
   id: string;
   name: string;
@@ -133,7 +82,6 @@ export interface CompiledPolicy {
 }
 
 export interface CompiledPolicySet {
-  schemaVersion: 4;
   tenantId: string;
   resource: string;
   action: string;
@@ -141,11 +89,6 @@ export interface CompiledPolicySet {
   updatedAt: string;
   allowPolicies: CompiledPolicy[];
   denyPolicies: CompiledPolicy[];
-}
-
-export interface PolicyValidationResult {
-  valid: boolean;
-  errors: string[];
 }
 
 export interface FilterNode {
@@ -162,7 +105,6 @@ export interface FilterGroup {
 }
 
 export interface FilterResult {
-  schemaVersion: 4;
   includeFilter: FilterGroup | FilterNode | null;
   excludeFilter: FilterGroup | FilterNode | null;
   decision?: Extract<AccessDecisionResult, "allow" | "deny">;
@@ -171,14 +113,6 @@ export interface FilterResult {
 }
 
 export interface ABACConfig {
-  attributes?: {
-    subject?: AttributeDefinition[];
-    environment?: AttributeDefinition[];
-    resource?: AttributeDefinition[];
-  };
-  operators?: OperatorConfig[];
   environmentResolvers?: EnvironmentResolver[];
-  resources?: ResourceConfig[];
-  actions?: ActionConfig[];
   defaultEffect?: PolicyEffect;
 }

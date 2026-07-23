@@ -27,8 +27,3 @@ export function parseTimeToMinutes(time: string): number | null {
 
   return hours * 60 + minutes;
 }
-
-
-export function timeToMinutes(time: string): number {
-  return parseTimeToMinutes(time) ?? 0;
-}

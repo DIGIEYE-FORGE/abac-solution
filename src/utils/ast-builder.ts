@@ -14,33 +14,11 @@ import type {
 import { compare } from "./operators";
 import { resolveValue } from "./resolver";
 
-// =====================================================
-// ABAC FILTER AST BUILDER
-//
-// This module converts active ABAC policies into a portable
-// filter AST that other services can translate into SQL or
-// evaluate against an in-memory resource context.
-//
-// Main flow:
-//
-// Policy[]
-//   -> select policies for resource/action
-//   -> evaluate subject/environment conditions now
-//   -> keep resource conditions as include/exclude filters
-//   -> return FilterResult / CompiledPolicySet
-// =====================================================
-
-// =====================================================
-// CONSTANTS
-// =====================================================
 
 const EMPTY_RESOLVER_MAP: Map<string, EnvironmentResolver> = new Map();
 
 type PlanExpression = boolean | FilterNode | FilterGroup;
 
-// =====================================================
-// POLICY TARGETING HELPERS
-// =====================================================
 
 /** Normalizes compile timestamps so cache keys and diagnostics have a stable string value. */
 function toUpdatedAt(value?: Date | string): string {
@@ -247,7 +225,6 @@ export function compilePolicies(params: {
   const active = selectActivePolicies(params.policies, params.resource, params.action);
 
   return {
-    schemaVersion: 4,
     tenantId: params.tenantId,
     resource: params.resource,
     action: params.action,
@@ -354,7 +331,6 @@ export function buildFilterResult(
   // An unconditional deny is terminal because deny policies override all allows.
   if (denyAll) {
     return {
-      schemaVersion: 4,
       includeFilter: null,
       excludeFilter: null,
       decision: "deny",
@@ -369,7 +345,6 @@ export function buildFilterResult(
   // An unconditional allow still keeps excludeFilter so deny-by-resource policies can remove rows.
   if (allowAll) {
     return {
-      schemaVersion: 4,
       includeFilter: null,
       excludeFilter,
       decision: "allow",
@@ -379,7 +354,6 @@ export function buildFilterResult(
   }
 
   return {
-    schemaVersion: 4,
     includeFilter,
     excludeFilter,
     defaultEffect,
