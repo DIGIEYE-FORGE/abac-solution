@@ -1,20 +1,28 @@
 {
-  "name": "@digieye/abac",
+  "name": "@digieye-forge/abac",
   "version": "1.0.0",
   "description": "Platform-agnostic ABAC (Attribute-Based Access Control) engine",
   "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "dev": "tsx --watch src/index.ts",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "typecheck": "tsc --noEmit",
     "build": "pnpm clean && tsc",
-    "test": "tsx examples/run-test.ts && tsx examples/breakpoint-test.ts",
-    "test:breakpoint": "tsx examples/breakpoint-test.ts",
-    "prepublishOnly": "pnpm build",
+    "test": "pnpm typecheck",
+    "prepublishOnly": "pnpm test && pnpm build",
     "prepare": "pnpm build"
   },
   "keywords": [
@@ -24,6 +32,22 @@
   ],
   "author": "DigiEye",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DIGIEYE-FORGE/abac-solution.git"
+  },
+  "homepage": "https://github.com/DIGIEYE-FORGE/abac-solution#readme",
+  "bugs": {
+    "url": "https://github.com/DIGIEYE-FORGE/abac-solution/issues"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.18.0",
   "dependencies": {
     "winston": "^3.17.0"
   },

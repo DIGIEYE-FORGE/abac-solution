@@ -1,6 +1,6 @@
-# @digieye/abac
+# @digieye-forge/abac
 
-`@digieye/abac` is the shared Attribute-Based Access Control engine used by Auth API to compile policies and produce portable authorization plans for platform services such as DPBE.
+`@digieye-forge/abac` is the shared Attribute-Based Access Control engine used by Auth API to compile policies and produce portable authorization plans for platform services such as DPBE.
 
 The package has one current contract. Policy and authorization payloads do not carry a schema discriminator. Contract changes are made directly in the shared TypeScript types and the matching Auth API/DPBE transport definitions.
 
@@ -50,12 +50,48 @@ This keeps policy evaluation deterministic and makes compiled sets safe to cache
 
 ## Installation
 
-The local Auth API workspace links this package through its package dependency. Build the package after changing its public types or runtime implementation:
+Configure GitHub Packages authentication with `NODE_AUTH_TOKEN` and map the `@digieye-forge` scope to GitHub Packages, then install the package:
 
 ```bash
-pnpm install
+pnpm add @digieye-forge/abac
+```
+
+For local package development:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm test
 pnpm build
 ```
+
+## Publishing
+
+The package is published to GitHub Packages. Use a classic GitHub personal access token with `write:packages` and repository access. Keep the token in `NODE_AUTH_TOKEN`; never commit it.
+
+Before the first publication, publish version `1.0.0`. For every later publication, update the version first:
+
+```bash
+pnpm version patch --no-git-tag-version
+```
+
+Verify the package:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm test
+pnpm build
+npm pack --dry-run
+```
+
+For manual publication from PowerShell, provide the token through the environment. The project `.npmrc` reads it through `${NODE_AUTH_TOKEN}`:
+
+```powershell
+$env:NODE_AUTH_TOKEN = "your-classic-github-pat"
+pnpm publish --no-git-checks
+Remove-Item Env:NODE_AUTH_TOKEN
+```
+
+Publishing a GitHub release also triggers the repository workflow, which uses its temporary `GITHUB_TOKEN`.
 
 ## Public API
 
@@ -73,7 +109,7 @@ Low-level operator, resolver, and AST-builder functions are internal implementat
 ## Basic Use
 
 ```ts
-import { ABAC, type Policy } from "@digieye/abac";
+import { ABAC, type Policy } from "@digieye-forge/abac";
 
 const policies: Policy[] = [
   {
